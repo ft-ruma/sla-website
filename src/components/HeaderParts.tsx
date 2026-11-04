@@ -4,6 +4,7 @@ import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { LANG_COOKIE, LANG_NAMES, LANGS, type Lang } from "@/lib/langs";
 import type { NavGroup, NavItem } from "./nav";
 
@@ -53,18 +54,66 @@ export function MenuPanel({ groups, menu, close, footer }: {
   footer: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
+  useEffect(() => setMounted(true), []);
   useEffect(() => setOpen(false), [pathname]);
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
+      document.body.style.overflow = prev;
     };
   }, [open]);
+
+  // Portal to <body>: the header uses backdrop-blur, which makes position:fixed
+  // children clip to the header bar — so the drawer looked like it did nothing.
+  const drawer = open && mounted
+    ? createPortal(
+        <div
+          id="site-menu"
+          role="dialog"
+          aria-modal="true"
+          aria-label={menu}
+          className="fixed inset-0 z-[60] flex flex-col bg-white"
+        >
+          <div className="flex h-14 shrink-0 items-center justify-between border-b border-black/[0.06] px-3 sm:h-[4.5rem] sm:px-6">
+            <p className="text-base font-extrabold tracking-tight">{menu}</p>
+            <button type="button" onClick={() => setOpen(false)}
+              className="tap grid size-11 place-items-center rounded-full text-ink ring-1 ring-black/10 transition active:bg-black/5">
+              <X className="size-6" strokeWidth={1.75} aria-hidden />
+              <span className="sr-only">{close}</span>
+            </button>
+          </div>
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            <div className="mx-auto grid max-w-6xl gap-8 px-5 py-8 sm:grid-cols-3 sm:gap-10 sm:px-8 sm:py-12">
+              {groups.map((g) => (
+                <div key={g.title}>
+                  <p className="label mb-4 text-ink">{g.title}</p>
+                  <ul className="flex flex-col">
+                    {g.items.map((i) => (
+                      <li key={i.href}>
+                        <Link href={i.href} aria-current={isActive(pathname, i.href) ? "page" : undefined}
+                          onClick={() => setOpen(false)}
+                          className="tap flex items-center justify-between rounded-xl px-3 py-3.5 text-lg font-semibold text-ink transition active:bg-sand hover:bg-sand aria-[current=page]:bg-sand aria-[current=page]:text-accent">
+                          {i.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+            <div className="mx-auto max-w-6xl px-5 pb-12 sm:px-8">{footer}</div>
+          </div>
+        </div>,
+        document.body,
+      )
+    : null;
 
   return (
     <>
@@ -73,29 +122,7 @@ export function MenuPanel({ groups, menu, close, footer }: {
         {open ? <X className="size-6" strokeWidth={1.75} aria-hidden /> : <Menu className="size-6" strokeWidth={1.75} aria-hidden />}
         <span className="sr-only">{open ? close : menu}</span>
       </button>
-
-      {open && (
-        <div id="site-menu" className="fixed inset-x-0 top-[var(--header-h)] bottom-0 z-40 overflow-y-auto overscroll-contain bg-white">
-          <div className="mx-auto grid max-w-6xl gap-8 px-5 py-8 sm:grid-cols-3 sm:gap-10 sm:px-8 sm:py-12">
-            {groups.map((g) => (
-              <div key={g.title}>
-                <p className="label mb-4 text-ink">{g.title}</p>
-                <ul className="flex flex-col">
-                  {g.items.map((i) => (
-                    <li key={i.href}>
-                      <Link href={i.href} aria-current={isActive(pathname, i.href) ? "page" : undefined}
-                        className="tap flex items-center justify-between rounded-xl px-3 py-3.5 text-lg font-semibold text-ink transition active:bg-sand hover:bg-sand aria-[current=page]:bg-sand aria-[current=page]:text-accent">
-                        {i.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-          <div className="mx-auto max-w-6xl px-5 pb-12 sm:px-8">{footer}</div>
-        </div>
-      )}
+      {drawer}
     </>
   );
 }
