@@ -6,9 +6,9 @@ import type { Dict } from "@/lib/dict/en";
 import { fill } from "@/lib/i18n";
 import { changePassword, signInStep, type FormState, type SignInState } from "@/lib/member-actions";
 
-const INPUT = "h-12 w-full border border-line bg-white px-4 outline-none focus:border-ink";
-const BUTTON = "inline-flex h-12 items-center justify-center gap-2 bg-night px-5 text-sm font-bold text-white hover:bg-black disabled:opacity-60";
-const LINK = "self-start text-sm font-semibold underline underline-offset-4 hover:text-accent disabled:opacity-60";
+const INPUT = "tap h-12 w-full border border-line bg-white px-4 text-base outline-none focus:border-ink sm:text-sm";
+const BUTTON = "tap inline-flex min-h-12 items-center justify-center gap-2 bg-night px-5 text-base font-bold text-white transition active:opacity-90 hover:bg-black disabled:opacity-60 sm:text-sm";
+const LINK = "tap self-start py-2 text-base font-semibold underline underline-offset-4 hover:text-accent disabled:opacity-60 sm:text-sm";
 
 function Field({ id, label, hint, ...input }: { id: string; label: string; hint?: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (

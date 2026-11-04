@@ -15,7 +15,12 @@ export const generateStaticParams = langParams;
 
 export const metadata: Metadata = { metadataBase: new URL(SITE_URL) };
 
-export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#ffffff" };
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#ffffff",
+};
 
 export default async function LangLayout({ children, params }: LangParams & { children: React.ReactNode }) {
   const { lang, t } = await pageLang(params);

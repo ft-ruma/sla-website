@@ -141,8 +141,8 @@ export function NewsCard({ item, lang, t, variant = "card" }: {
         <div className="relative flex flex-col gap-3 p-6 sm:p-12">
           <p className="text-xs font-bold tracking-[0.16em] text-white/85 uppercase">{t[`newsCat_${item.category}` as keyof Dict]}</p>
           <span aria-hidden className="h-px w-16 bg-white/70" />
-          <h3 className="max-w-3xl text-3xl font-extrabold tracking-tight text-balance sm:text-5xl">{item.title[lang]}</h3>
-          <p className="max-w-xl text-sm text-white/75 text-pretty sm:text-base">{item.summary[lang]}</p>
+          <h3 className="max-w-3xl text-[1.75rem] leading-tight font-extrabold tracking-tight text-balance sm:text-5xl">{item.title[lang]}</h3>
+          <p className="max-w-xl text-base text-white/75 text-pretty sm:text-base">{item.summary[lang]}</p>
           <span className="mt-1 text-sm font-medium underline decoration-white/50 underline-offset-4 group-hover:decoration-white">{t.readMore}</span>
         </div>
       </Link>

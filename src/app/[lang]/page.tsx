@@ -77,17 +77,18 @@ export default async function Home({ params }: LangParams) {
       {/* Hero: who we are, the three things people come to do, and the next meet */}
       <section className="relative overflow-hidden bg-night text-white">
         <div aria-hidden className="absolute inset-0 bg-[radial-gradient(60rem_30rem_at_85%_10%,rgb(232_93_4/0.35),transparent_60%),radial-gradient(40rem_30rem_at_0%_100%,rgb(6_7_248/0.35),transparent_60%)]" />
-        <TrackArt numbers={false} className="pointer-events-none absolute -right-24 -bottom-10 w-[46rem] max-w-none opacity-90 sm:-right-10 lg:right-0 lg:w-[44rem]" />
+        {/* Clip to the section: a fixed rem width would force phones to zoom the whole page out. */}
+        <TrackArt numbers={false} className="pointer-events-none absolute inset-y-0 -right-8 w-[min(42rem,92%)] opacity-50 sm:-right-6 sm:opacity-80 lg:right-0 lg:w-[44rem] lg:opacity-90" />
         <div aria-hidden className="absolute inset-0 bg-linear-to-r from-night via-night/80 to-transparent lg:via-night/55" />
         <Container className="relative grid gap-10 py-16 sm:py-20 lg:grid-cols-[1.2fr_1fr] lg:py-28">
           <div className="rise flex flex-col items-start">
             <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-bold tracking-[0.14em] uppercase ring-1 ring-white/20">
               <span className="size-1.5 rounded-full bg-accent" /> {hero.kicker}
             </p>
-            <h1 className="mt-6 max-w-2xl text-5xl leading-[1.02] font-extrabold tracking-tight text-balance sm:text-6xl lg:text-7xl">
+            <h1 className="mt-6 max-w-2xl text-[2.35rem] leading-[1.05] font-extrabold tracking-tight text-balance sm:text-6xl lg:text-7xl">
               {hero.title}
             </h1>
-            <p className="mt-5 max-w-xl text-lg text-white/75 text-pretty">{hero.text}</p>
+            <p className="mt-5 max-w-xl text-[1.1rem] leading-relaxed text-white/75 text-pretty sm:text-lg">{hero.text}</p>
             <div className="mt-8 flex flex-wrap gap-3">
               <a href={portal.home(lang)} className="btn btn-primary">{t.register} <ArrowRight className="size-4" aria-hidden /></a>
               <Link href={`/${lang}/sign-in`} className="btn btn-glass"><LogIn className="size-4" aria-hidden /> {t.signIn}</Link>
@@ -123,13 +124,13 @@ export default async function Home({ params }: LangParams) {
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             {QUICK.map(([key, path, tone]) => (
               <li key={key}>
-                <Link href={`/${lang}${path}`} className="group card card-hover flex h-full flex-col gap-3 p-4">
-                  <span className={`grid size-11 place-items-center rounded-2xl ${TILE_TONE[tone]}`}>
-                    <NavIcon name={key} className="size-5" />
+                <Link href={`/${lang}${path}`} className="group card card-hover tap flex h-full flex-col gap-3 p-4 sm:p-4">
+                  <span className={`grid size-12 place-items-center rounded-2xl sm:size-11 ${TILE_TONE[tone]}`}>
+                    <NavIcon name={key} className="size-6 sm:size-5" />
                   </span>
-                  <span className="flex items-center justify-between gap-2 font-bold">
+                  <span className="flex items-center justify-between gap-2 text-[1.02rem] font-bold sm:text-base">
                     {t[NAV_LABEL[key] as keyof typeof t]}
-                    <ArrowRight className="size-4 text-muted transition group-hover:translate-x-0.5 group-hover:text-accent" aria-hidden />
+                    <ArrowRight className="size-4 shrink-0 text-muted transition group-hover:translate-x-0.5 group-hover:text-accent" aria-hidden />
                   </span>
                 </Link>
               </li>

@@ -2,8 +2,8 @@ import { CircleAlert, CircleCheck } from "lucide-react";
 
 // Small building blocks for the admin forms.
 
-export const INPUT = "h-11 w-full border border-black/15 bg-white px-3 text-sm outline-none focus:border-accent focus:ring-2 focus:ring-accent/20";
-export const TEXTAREA = "w-full border border-black/15 bg-white px-3 py-2.5 text-sm leading-relaxed outline-none focus:border-accent focus:ring-2 focus:ring-accent/20";
+export const INPUT = "tap h-12 w-full border border-black/15 bg-white px-3 text-base outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 sm:h-11 sm:text-sm";
+export const TEXTAREA = "w-full border border-black/15 bg-white px-3 py-2.5 text-base leading-relaxed outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 sm:text-sm";
 export const LABEL = "flex flex-col gap-1.5 text-sm font-semibold";
 
 const MESSAGES: Record<string, [string, boolean]> = {

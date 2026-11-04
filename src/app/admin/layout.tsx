@@ -8,7 +8,12 @@ const notoSinhala = Noto_Sans_Sinhala({ variable: "--font-sinhala", subsets: ["s
 const notoTamil = Noto_Sans_Tamil({ variable: "--font-tamil", subsets: ["tamil"] });
 
 export const metadata: Metadata = { title: "Website admin · Sri Lanka Athletics", robots: { index: false, follow: false } };
-export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#f6f5f2" };
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#f6f5f2",
+};
 
 /** The website's content admin. English only; separate from the public pages' layout. */
 export default function AdminRoot({ children }: { children: React.ReactNode }) {

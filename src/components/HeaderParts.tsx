@@ -30,8 +30,8 @@ export function LanguageLinks({ lang, label, tone = "bar" }: { lang: Lang; label
     ? "px-1.5 py-0.5 text-xs font-bold tracking-wider text-white/45 uppercase hover:text-white aria-[current=true]:text-white"
     : tone === "menu"
       ? "px-3 py-2 text-sm font-bold tracking-wider uppercase text-ink/50 hover:text-ink aria-[current=true]:text-ink"
-      // a 36px target, so it is easy to tap on a phone
-      : "grid h-9 min-w-9 place-items-center rounded-full px-1.5 text-xs font-bold tracking-wider text-ink/45 uppercase transition hover:bg-black/5 hover:text-ink aria-[current=true]:text-ink";
+      // ≥44px tap target on phones
+      : "grid h-11 min-w-11 place-items-center rounded-full px-2 text-sm font-bold tracking-wider text-ink/45 uppercase transition active:bg-black/5 hover:bg-black/5 hover:text-ink aria-[current=true]:text-ink";
   return (
     <nav aria-label={label} className="flex items-center gap-0.5">
       {LANGS.map((l) => (
@@ -69,22 +69,22 @@ export function MenuPanel({ groups, menu, close, footer }: {
   return (
     <>
       <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls="site-menu"
-        className="grid size-10 place-items-center self-center rounded-full text-ink ring-1 ring-black/10 transition hover:ring-ink">
+        className="tap grid size-11 place-items-center self-center rounded-full text-ink ring-1 ring-black/10 transition active:bg-black/5 hover:ring-ink">
         {open ? <X className="size-6" strokeWidth={1.75} aria-hidden /> : <Menu className="size-6" strokeWidth={1.75} aria-hidden />}
         <span className="sr-only">{open ? close : menu}</span>
       </button>
 
       {open && (
-        <div id="site-menu" className="fixed inset-x-0 top-[var(--header-h)] bottom-0 z-40 overflow-y-auto bg-white">
-          <div className="mx-auto grid max-w-6xl gap-10 px-5 py-8 sm:grid-cols-3 sm:px-8 sm:py-12">
+        <div id="site-menu" className="fixed inset-x-0 top-[var(--header-h)] bottom-0 z-40 overflow-y-auto overscroll-contain bg-white">
+          <div className="mx-auto grid max-w-6xl gap-8 px-5 py-8 sm:grid-cols-3 sm:gap-10 sm:px-8 sm:py-12">
             {groups.map((g) => (
               <div key={g.title}>
-                <p className="label mb-5 text-ink">{g.title}</p>
+                <p className="label mb-4 text-ink">{g.title}</p>
                 <ul className="flex flex-col">
                   {g.items.map((i) => (
                     <li key={i.href}>
                       <Link href={i.href} aria-current={isActive(pathname, i.href) ? "page" : undefined}
-                        className="flex items-center justify-between rounded-xl px-3 py-3 text-lg font-semibold text-ink transition hover:bg-sand aria-[current=page]:bg-sand aria-[current=page]:text-accent">
+                        className="tap flex items-center justify-between rounded-xl px-3 py-3.5 text-lg font-semibold text-ink transition active:bg-sand hover:bg-sand aria-[current=page]:bg-sand aria-[current=page]:text-accent">
                         {i.label}
                       </Link>
                     </li>

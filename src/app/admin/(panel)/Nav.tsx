@@ -35,8 +35,8 @@ export function AdminNav({ name, role, logout }: { name: string; role: string; l
     <nav aria-label="Admin" className="flex flex-col gap-1">
       {items.map((i) => (
         <Link key={i.href} href={i.href} aria-current={active(path, i.href) ? "page" : undefined}
-          className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-white/70 transition hover:bg-white/10 hover:text-white aria-[current=page]:bg-accent aria-[current=page]:text-white">
-          <i.icon className="size-4.5 shrink-0" aria-hidden /> {i.label}
+          className="tap flex items-center gap-3 rounded-xl px-3 py-3 text-base font-semibold text-white/70 transition active:bg-white/10 hover:bg-white/10 hover:text-white aria-[current=page]:bg-accent aria-[current=page]:text-white sm:py-2.5 sm:text-sm">
+          <i.icon className="size-5 shrink-0 sm:size-4.5" aria-hidden /> {i.label}
         </Link>
       ))}
     </nav>
@@ -75,9 +75,10 @@ export function AdminNav({ name, role, logout }: { name: string; role: string; l
         {footer}
       </aside>
       <div className="sticky top-0 z-30 flex items-center justify-between bg-night px-4 py-3 text-white lg:hidden">
-        <span className="font-bold">{current?.label ?? "Website admin"}</span>
-        <button type="button" onClick={() => setOpen(true)} aria-expanded={open} className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm ring-1 ring-white/30">
-          <Menu className="size-4" aria-hidden /> Menu
+        <span className="text-base font-bold">{current?.label ?? "Website admin"}</span>
+        <button type="button" onClick={() => setOpen(true)} aria-expanded={open}
+          className="tap inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-base ring-1 ring-white/30 active:bg-white/10">
+          <Menu className="size-5" aria-hidden /> Menu
         </button>
       </div>
       {open && (
