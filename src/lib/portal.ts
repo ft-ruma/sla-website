@@ -1,6 +1,6 @@
 import type { Lang } from "./i18n";
 
-const PORTAL = (process.env.NEXT_PUBLIC_PORTAL_URL || "http://localhost:3000").replace(/\/$/, "");
+const PORTAL = (process.env.NEXT_PUBLIC_PORTAL_URL || "https://sla.ascendit.dev").replace(/\/$/, "");
 export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3001").replace(/\/$/, "");
 
 /** Links into the registration portal, which is a separate application. */

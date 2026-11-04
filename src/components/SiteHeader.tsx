@@ -19,7 +19,6 @@ export function SiteHeader({ lang, t, notice }: { lang: Lang; t: Dict; notice?: 
         {t.skipToContent}
       </a>
       <div className="border-b border-black/[0.06]">
-        {/* Phones: logo + short name + menu only. Languages live in the menu drawer. */}
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-3 sm:h-[4.5rem] sm:gap-4 sm:px-6">
           <Link href={`/${lang}`} className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
             <Image src="/brand/sla-logo.png" alt="" width={48} height={48} priority className="size-10 shrink-0 sm:size-12" />
@@ -31,7 +30,6 @@ export function SiteHeader({ lang, t, notice }: { lang: Lang; t: Dict; notice?: 
 
           <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
             <MainNav items={mainNav(lang, t)} label={t.menu} />
-            {/* Language pills are too wide for a phone bar — show from tablet up */}
             <div className="hidden md:block">
               <LanguageLinks lang={lang} label={t.language} />
             </div>
@@ -43,20 +41,22 @@ export function SiteHeader({ lang, t, notice }: { lang: Lang; t: Dict; notice?: 
               className="tap hidden h-11 items-center rounded-full bg-accent px-4 text-sm font-bold text-white shadow-[0_8px_18px_-8px_rgb(232_93_4/0.7)] transition active:opacity-90 lg:inline-flex">
               {t.register}
             </a>
-            <MenuPanel groups={fullNav(lang, t)} menu={t.menu} close={t.close}
-              footer={
-                <div className="flex flex-col gap-4 border-t border-line pt-6">
-                  <div className="md:hidden">
-                    <p className="mb-2 text-xs font-bold tracking-wider text-muted uppercase">{t.language}</p>
-                    <LanguageLinks lang={lang} label={t.language} tone="menu" />
-                  </div>
-                  <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                    <Link href={`/${lang}/sign-in`} className="tap flex items-center text-base font-semibold hover:text-accent">{t.signInTitle}</Link>
-                    <a href={portal.athlete(lang)} className="tap flex items-center text-base font-semibold hover:text-accent">{t.registerAthlete}</a>
-                    <a href={portal.coach(lang)} className="tap flex items-center text-base font-semibold hover:text-accent">{t.registerCoach}</a>
-                  </div>
-                </div>
-              } />
+            <MenuPanel
+              groups={fullNav(lang, t)}
+              menu={t.menu}
+              close={t.close}
+              siteName={t.siteName}
+              languageLabel={t.language}
+              lang={lang}
+              signInHref={`/${lang}/sign-in`}
+              signInLabel={t.signIn}
+              registerHref={portal.home(lang)}
+              registerLabel={t.register}
+              athleteHref={portal.athlete(lang)}
+              athleteLabel={t.registerAthlete}
+              coachHref={portal.coach(lang)}
+              coachLabel={t.registerCoach}
+            />
           </div>
         </div>
       </div>
