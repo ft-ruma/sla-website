@@ -77,21 +77,21 @@ export default async function Home({ params }: LangParams) {
       {/* Hero: who we are, the three things people come to do, and the next meet */}
       <section className="relative overflow-hidden bg-night text-white">
         <div aria-hidden className="absolute inset-0 bg-[radial-gradient(60rem_30rem_at_85%_10%,rgb(232_93_4/0.35),transparent_60%),radial-gradient(40rem_30rem_at_0%_100%,rgb(6_7_248/0.35),transparent_60%)]" />
-        {/* Clip to the section: a fixed rem width would force phones to zoom the whole page out. */}
-        <TrackArt numbers={false} className="pointer-events-none absolute inset-y-0 -right-8 w-[min(42rem,92%)] opacity-50 sm:-right-6 sm:opacity-80 lg:right-0 lg:w-[44rem] lg:opacity-90" />
+        {/* Hidden on phones/tablets: wide SVG art made the page feel tiny. */}
+        <TrackArt numbers={false} className="pointer-events-none absolute inset-y-0 right-0 hidden w-[44rem] opacity-90 lg:block" />
         <div aria-hidden className="absolute inset-0 bg-linear-to-r from-night via-night/80 to-transparent lg:via-night/55" />
         <Container className="relative grid gap-10 py-16 sm:py-20 lg:grid-cols-[1.2fr_1fr] lg:py-28">
           <div className="rise flex flex-col items-start">
             <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-bold tracking-[0.14em] uppercase ring-1 ring-white/20">
               <span className="size-1.5 rounded-full bg-accent" /> {hero.kicker}
             </p>
-            <h1 className="mt-6 max-w-2xl text-[2.35rem] leading-[1.05] font-extrabold tracking-tight text-balance sm:text-6xl lg:text-7xl">
+            <h1 className="mt-5 max-w-2xl text-[2.15rem] leading-[1.08] font-extrabold tracking-tight text-balance sm:mt-6 sm:text-6xl lg:text-7xl">
               {hero.title}
             </h1>
-            <p className="mt-5 max-w-xl text-[1.1rem] leading-relaxed text-white/75 text-pretty sm:text-lg">{hero.text}</p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <a href={portal.home(lang)} className="btn btn-primary">{t.register} <ArrowRight className="size-4" aria-hidden /></a>
-              <Link href={`/${lang}/sign-in`} className="btn btn-glass"><LogIn className="size-4" aria-hidden /> {t.signIn}</Link>
+            <p className="mt-4 max-w-xl text-[1.08rem] leading-relaxed text-white/80 text-pretty sm:mt-5 sm:text-lg">{hero.text}</p>
+            <div className="mt-7 flex w-full flex-col gap-3 sm:mt-8 sm:w-auto sm:flex-row sm:flex-wrap">
+              <a href={portal.home(lang)} className="btn btn-primary w-full sm:w-auto">{t.register} <ArrowRight className="size-4" aria-hidden /></a>
+              <Link href={`/${lang}/sign-in`} className="btn btn-glass w-full sm:w-auto"><LogIn className="size-4" aria-hidden /> {t.signIn}</Link>
             </div>
             <div className="mt-10 w-full max-w-md">
               <p className="mb-2 text-sm font-semibold text-white/70">{t.verifyTitle}</p>

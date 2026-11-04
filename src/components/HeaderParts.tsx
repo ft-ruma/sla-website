@@ -29,7 +29,7 @@ export function LanguageLinks({ lang, label, tone = "bar" }: { lang: Lang; label
   const cls = tone === "dark"
     ? "px-1.5 py-0.5 text-xs font-bold tracking-wider text-white/45 uppercase hover:text-white aria-[current=true]:text-white"
     : tone === "menu"
-      ? "px-3 py-2 text-sm font-bold tracking-wider uppercase text-ink/50 hover:text-ink aria-[current=true]:text-ink"
+      ? "tap inline-flex min-h-11 items-center rounded-full px-4 text-base font-bold tracking-wider uppercase text-ink/50 hover:bg-sand hover:text-ink aria-[current=true]:bg-sand aria-[current=true]:text-ink"
       // ≥44px tap target on phones
       : "grid h-11 min-w-11 place-items-center rounded-full px-2 text-sm font-bold tracking-wider text-ink/45 uppercase transition active:bg-black/5 hover:bg-black/5 hover:text-ink aria-[current=true]:text-ink";
   return (

@@ -192,7 +192,11 @@ body {
   color: var(--color-ink);
 }
 
-html:lang(si), html:lang(ta) { font-size: 106.25%; }
+/* Desktop SI/TA bump only — phone/tablet rules below set their own sizes
+   (html:lang is more specific than :root, so it must not fight the mobile scale). */
+@media (min-width: 1024px) {
+  html:lang(si), html:lang(ta) { font-size: 106.25%; }
+}
 html:lang(si) body, html:lang(ta) body { line-height: 1.7; }
 html:lang(si) :is(h1, h2, h3), html:lang(ta) :is(h1, h2, h3) { line-height: 1.35; font-weight: 700; }
 
@@ -245,53 +249,88 @@ html:lang(si) :is(h1, h2, h3), html:lang(ta) :is(h1, h2, h3) { line-height: 1.35
   body { background: white; }
 }
 
-/* ─── Phone + tablet layout (up to ~1023px) ─────────────────────────
-   Bigger base type, bigger controls, and no hover-only feedback. */
-@media (max-width: 1023.98px) {
+/* ─── Phone layout (< 640px): dedicated larger scale ──────────────── */
+@media (max-width: 639.98px) {
+  html {
+    font-size: 19px !important; /* !important beats html:lang SI/TA rules */
+  }
   :root {
-    /* Bump rem so Tailwind text-* / spacing grow together */
-    font-size: 17.5px;
-    --text-xs: 0.8125rem;   /* ~14px */
-    --text-sm: 0.9375rem;   /* ~16px */
-    --text-base: 1.0625rem; /* ~19px */
-    --text-lg: 1.1875rem;   /* ~21px */
-    --text-xl: 1.3125rem;   /* ~23px */
-    --text-2xl: 1.5rem;
-    --text-3xl: 1.875rem;
-    --text-4xl: 2.25rem;
-    --text-5xl: 2.75rem;
-    --header-h: 4.25rem;
+    --header-h: 3.5rem;
+    --text-xs: 0.84rem;
+    --text-sm: 0.95rem;
+    --text-base: 1.05rem;
+    --text-lg: 1.2rem;
+    --text-xl: 1.35rem;
+    --text-2xl: 1.55rem;
+    --text-3xl: 1.85rem;
+    --text-4xl: 2.15rem;
+    --text-5xl: 2.45rem;
   }
   header:has(.sample-notice) {
-    --header-h: 6.5rem;
+    --header-h: 5.75rem;
   }
 
-  /* Tables scroll inside themselves instead of widening the page */
+  body {
+    font-size: 1.05rem;
+    line-height: 1.55;
+  }
+
+  /* Force readable content sizes even when components use tiny utilities */
+  main p,
+  main li,
+  main td,
+  main th,
+  main label {
+    font-size: max(1em, 1.02rem);
+  }
+
+  main img,
+  main picture img {
+    max-width: 100%;
+    height: auto;
+  }
+
   .overflow-x-auto,
   .overflow-x-scroll {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-x: contain;
+    max-width: 100%;
+  }
+}
+
+/* ─── Tablet layout (640–1023px) ─────────────────────────────────── */
+@media (min-width: 640px) and (max-width: 1023.98px) {
+  html {
+    font-size: 18.5px !important;
+  }
+  :root {
+    --header-h: 4.25rem;
+    --text-xs: 0.82rem;
+    --text-sm: 0.94rem;
+    --text-base: 1.05rem;
+    --text-lg: 1.18rem;
+    --text-xl: 1.32rem;
+    --text-2xl: 1.5rem;
+    --text-3xl: 1.85rem;
+    --text-4xl: 2.25rem;
+    --text-5xl: 2.65rem;
+  }
+  header:has(.sample-notice) {
+    --header-h: 6.25rem;
   }
 }
 
 @layer components {
   @media (max-width: 1023.98px) {
-    .label { font-size: 0.8125rem; letter-spacing: 0.08em; }
+    .label { font-size: 0.85rem; letter-spacing: 0.08em; }
     .btn {
-      min-height: 3.25rem;
-      padding: 0.85rem 1.5rem;
-      font-size: 1.05rem;
+      min-height: 3.35rem;
+      padding: 0.9rem 1.55rem;
+      font-size: 1.08rem;
     }
-    .cat { font-size: 0.8rem; }
-    .more { font-size: 1rem; }
+    .cat { font-size: 0.85rem; }
+    .more { font-size: 1.05rem; }
   }
 }
 
-/* Larger phones in landscape / small tablets */
-@media (min-width: 640px) and (max-width: 1023.98px) {
-  :root {
-    font-size: 18px;
-  }
-}
-
-/* Desktop keeps the default 16px root; no change needed above 1024px */
+/* Desktop keeps the default ~16px root */

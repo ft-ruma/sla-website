@@ -13,8 +13,8 @@ export function PageHero({ title, intro, kicker, children }: {
         style={{ backgroundImage: "repeating-linear-gradient(115deg, #111 0 2px, transparent 2px 38px)" }} />
       <div className="relative mx-auto max-w-6xl px-4 pt-10 pb-12 sm:px-6 sm:pt-14 sm:pb-16">
         {kicker && <p className="label mb-4 text-ink">{kicker}</p>}
-        <h1 className="max-w-4xl text-[2.15rem] leading-[1.1] font-extrabold tracking-tight text-balance sm:text-6xl">{title}</h1>
-        {intro && <p className="mt-4 max-w-2xl text-[1.05rem] text-muted text-pretty sm:text-lg">{intro}</p>}
+        <h1 className="max-w-4xl text-[2.05rem] leading-[1.12] font-extrabold tracking-tight text-balance sm:text-6xl">{title}</h1>
+        {intro && <p className="mt-4 max-w-2xl text-[1.08rem] leading-relaxed text-muted text-pretty sm:text-lg">{intro}</p>}
         {children && <div className="mt-8">{children}</div>}
       </div>
     </section>
