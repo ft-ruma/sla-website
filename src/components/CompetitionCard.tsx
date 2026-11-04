@@ -34,7 +34,7 @@ export function CompetitionCard({ c, lang, t }: { c: Competition; lang: Lang; t:
       className="group card card-hover mb-3 flex gap-4 p-4 sm:gap-5 sm:p-5">
       <div className={`flex w-16 shrink-0 flex-col items-center justify-center self-start rounded-2xl py-2.5 text-white ${CATEGORY_COLOUR[c.category]}`}>
         <p className="text-2xl font-extrabold leading-none tabular tracking-tight">{day}</p>
-        <p className="mt-1 text-[0.72rem] font-bold tracking-[0.14em] uppercase opacity-90">{month}</p>
+        <p className="mt-1 text-xs font-bold tracking-[0.14em] uppercase opacity-90">{month}</p>
       </div>
       <div className="min-w-0 flex-1">
         <div className="mb-1.5 flex flex-wrap items-center gap-2">

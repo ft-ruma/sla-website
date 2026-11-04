@@ -21,8 +21,8 @@ export function SiteHeader({ lang, t, notice }: { lang: Lang; t: Dict; notice?: 
           <Link href={`/${lang}`} className="flex min-w-0 items-center gap-3">
             <Image src="/brand/sla-logo.png" alt="" width={44} height={44} priority className="size-10 shrink-0 sm:size-11" />
             <span className="flex min-w-0 flex-col leading-none">
-              <span className="truncate text-[0.95rem] font-extrabold tracking-tight text-ink sm:text-lg">{t.siteName}</span>
-              <span className="mt-0.5 hidden text-[0.72rem] font-bold tracking-[0.16em] text-muted uppercase sm:block">{t.siteTagline}</span>
+              <span className="truncate text-base font-extrabold tracking-tight text-ink sm:text-lg">{t.siteName}</span>
+              <span className="mt-0.5 hidden text-xs font-bold tracking-[0.16em] text-muted uppercase sm:block">{t.siteTagline}</span>
             </span>
           </Link>
 

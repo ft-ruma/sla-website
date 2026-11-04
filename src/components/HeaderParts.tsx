@@ -27,11 +27,11 @@ export function LanguageLinks({ lang, label, tone = "bar" }: { lang: Lang; label
   const pathname = usePathname();
   const rest = pathname.replace(/^\/(si|ta|en)(?=\/|$)/, "");
   const cls = tone === "dark"
-    ? "px-1.5 py-0.5 text-[0.7rem] font-bold tracking-wider text-white/45 uppercase hover:text-white aria-[current=true]:text-white"
+    ? "px-1.5 py-0.5 text-xs font-bold tracking-wider text-white/45 uppercase hover:text-white aria-[current=true]:text-white"
     : tone === "menu"
       ? "px-3 py-2 text-sm font-bold tracking-wider uppercase text-ink/50 hover:text-ink aria-[current=true]:text-ink"
       // a 36px target, so it is easy to tap on a phone
-      : "grid h-9 min-w-9 place-items-center rounded-full px-1.5 text-[0.72rem] font-bold tracking-wider text-ink/45 uppercase transition hover:bg-black/5 hover:text-ink aria-[current=true]:text-ink";
+      : "grid h-9 min-w-9 place-items-center rounded-full px-1.5 text-xs font-bold tracking-wider text-ink/45 uppercase transition hover:bg-black/5 hover:text-ink aria-[current=true]:text-ink";
   return (
     <nav aria-label={label} className="flex items-center gap-0.5">
       {LANGS.map((l) => (

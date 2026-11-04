@@ -62,7 +62,7 @@ export function AdminNav({ name, role, logout }: { name: string; role: string; l
       <Image src="/brand/sla-logo.png" alt="" width={36} height={36} className="size-9" />
       <span className="leading-tight">
         <span className="block text-sm font-extrabold text-white">Sri Lanka Athletics</span>
-        <span className="text-[0.65rem] font-bold tracking-wider text-white/50 uppercase">Website admin</span>
+        <span className="text-xs font-bold tracking-wider text-white/50 uppercase">Website admin</span>
       </span>
     </div>
   );

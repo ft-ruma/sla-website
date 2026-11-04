@@ -27,9 +27,29 @@ header:has(.sample-notice) {
   --header-h: 6.75rem;
 }
 
+/* Phones and tablets: a larger type scale, so text reads at arm's length
+   instead of looking like a shrunken desktop page. Desktop keeps Tailwind's. */
+@media (max-width: 1023.98px) {
+  :root {
+    --text-xs: 0.875rem;    /* 14px */
+    --text-sm: 0.9375rem;   /* 15px */
+    --text-base: 1.0625rem; /* 17px */
+    --text-lg: 1.1875rem;   /* 19px */
+    --text-xl: 1.3125rem;   /* 21px */
+  }
+}
+
 /* Soft corners on every control. This sits in the base layer after
    Tailwind's reset (which squares them), so any rounded-* class still wins. */
 @layer base {
+  /* Never wider than the screen. A phone shrinks the whole page to fit its
+     widest element, so one long Tamil word or table would make all the text
+     and photos tiny. Grid and flex children may shrink, long words may wrap,
+     and anything still too wide is clipped rather than zooming the page out. */
+  html, body { overflow-x: clip; }
+  body { overflow-wrap: break-word; }
+  .grid > * { min-width: 0; }
+
   button, input:not([type="checkbox"]):not([type="radio"]), select, textarea {
     border-radius: 0.75rem;
   }
@@ -176,4 +196,13 @@ html:lang(si) :is(h1, h2, h3), html:lang(ta) :is(h1, h2, h3) { line-height: 1.35
 @media print {
   .no-print { display: none !important; }
   body { background: white; }
+}
+
+/* Phones and tablets: slightly larger section labels and buttons (kept last
+   so it follows their definitions above). */
+@layer components {
+  @media (max-width: 1023.98px) {
+    .label { font-size: 0.85rem; }
+    .btn { font-size: 1rem; height: 3.25rem; }
+  }
 }

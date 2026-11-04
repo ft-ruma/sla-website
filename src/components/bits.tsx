@@ -26,7 +26,7 @@ const BADGE_TONES = {
 
 export function Badge({ tone = "blue", children }: { tone?: keyof typeof BADGE_TONES; children: React.ReactNode }) {
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[0.72rem] font-bold tracking-wider uppercase ${BADGE_TONES[tone]}`}>
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold tracking-wider uppercase ${BADGE_TONES[tone]}`}>
       {children}
     </span>
   );

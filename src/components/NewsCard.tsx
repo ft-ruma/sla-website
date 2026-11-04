@@ -115,7 +115,7 @@ export function NewsVisual({ item, size = "lg" }: { item: NewsItem; size?: "lg" 
 
 export function NewsMeta({ item, lang, t }: { item: NewsItem; lang: Lang; t: Dict }) {
   return (
-    <p className="text-[0.8rem] text-muted">
+    <p className="text-xs text-muted">
       <time dateTime={item.date}>{formatDate(lang, item.date, { day: "numeric", month: "short", year: "numeric" })}</time>
       <span className="mx-1.5 text-ink/30">|</span>
       <span className="cat">{t[`newsCat_${item.category}` as keyof Dict]}</span>

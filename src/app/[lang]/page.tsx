@@ -66,7 +66,7 @@ export default async function Home({ params }: LangParams) {
       {live.map((c) => (
         <Link key={c.id} href={`/${lang}/competitions/${c.id}`}
           className="no-print flex items-center justify-center gap-x-3 gap-y-1 bg-clay px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#a10f1a]">
-          <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-2.5 py-0.5 text-[0.72rem] font-bold tracking-[0.14em] uppercase">
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-bold tracking-[0.14em] uppercase">
             <span className="live-dot size-1.5 rounded-full bg-white" /> {t.liveNow}
           </span>
           <span className="truncate">{c.name[lang]}</span>
@@ -203,7 +203,7 @@ export default async function Home({ params }: LangParams) {
                   <Link href={`/${lang}/rankings?event=${r.event}&gender=${r.gender}`}
                     className="group card card-hover flex h-full flex-col gap-2 p-4">
                     <span className="flex items-center justify-between gap-2">
-                      <span className="text-[0.72rem] font-bold tracking-[0.12em] text-muted uppercase">
+                      <span className="text-xs font-bold tracking-[0.12em] text-muted uppercase">
                         {getEvent(r.event).name[lang]} · {r.gender === "M" ? t.men : t.women}
                       </span>
                       <Medal className="size-4 text-amber-500" aria-hidden />
@@ -222,7 +222,7 @@ export default async function Home({ params }: LangParams) {
               {records.map((r) => (
                 <li key={`${r.event}-${r.gender}`} className="flex items-baseline justify-between gap-4 py-3">
                   <span className="min-w-0">
-                    <span className="block text-[0.7rem] font-bold tracking-wider text-muted uppercase">{getEvent(r.event).name[lang]} · {r.gender === "M" ? t.men : t.women}</span>
+                    <span className="block text-xs font-bold tracking-wider text-muted uppercase">{getEvent(r.event).name[lang]} · {r.gender === "M" ? t.men : t.women}</span>
                     <span className="block truncate font-semibold">{r.athlete}</span>
                   </span>
                   <span className="font-extrabold tabular">{formatMark(r.event, r.mark)}</span>

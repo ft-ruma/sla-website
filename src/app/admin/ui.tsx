@@ -64,7 +64,7 @@ export function LangFields({ name, label, value, rows, required, max = 500 }: {
           const placeholder = l === "en" ? undefined : "Uses the English text";
           return (
           <label key={l} className="flex flex-col gap-1">
-            <span className="text-[0.7rem] font-bold tracking-wider text-muted uppercase">{LANG_NAMES[l]}{l !== "en" && " (optional)"}</span>
+            <span className="text-xs font-bold tracking-wider text-muted uppercase">{LANG_NAMES[l]}{l !== "en" && " (optional)"}</span>
             {rows ? (
               <textarea name={`${name}_${l}`} defaultValue={v} placeholder={placeholder} rows={rows} maxLength={max * 40} lang={l}
                 required={required && l === "en"} className={TEXTAREA} />

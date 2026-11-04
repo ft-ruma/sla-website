@@ -89,7 +89,7 @@ export default async function AccountPage({
       <section className="bg-white">
         <Container className="grid gap-6 py-12 lg:grid-cols-[1.2fr_1fr]">
           <Card className="p-6 sm:p-8">
-            <p className="text-[0.7rem] font-bold tracking-[0.18em] text-accent uppercase">{t.dashSettingsTitle}</p>
+            <p className="text-xs font-bold tracking-[0.18em] text-accent uppercase">{t.dashSettingsTitle}</p>
             <h2 className="mt-1 text-lg font-bold">{t.passwordTitle}</h2>
             <p className="mt-1 mb-5 text-sm text-muted">{t.passwordChangeText}</p>
             <ChangePassword lang={lang} t={t} />

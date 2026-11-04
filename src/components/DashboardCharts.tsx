@@ -242,7 +242,7 @@ export function Columns({ items }: { items: { label: string; value: number }[] }
         <div key={i.label} className="flex flex-1 flex-col items-center gap-1" title={`${i.label}: ${i.value}`}>
           <span className="text-xs font-bold tabular-nums">{i.value}</span>
           <div className="w-full max-w-10 rounded-t-[4px] bg-brand" style={{ height: `${Math.max(i.value ? 6 : 0, (i.value / top) * 64)}px` }} />
-          <span className="text-[0.7rem] text-muted">{i.label}</span>
+          <span className="text-xs text-muted">{i.label}</span>
         </div>
       ))}
     </div>
@@ -291,7 +291,7 @@ export function CoachingTimeline({ stints, now, labels }: {
       </ul>
       <div className="mt-1 grid grid-cols-[minmax(6rem,9rem)_1fr] gap-3">
         <span />
-        <span className="relative h-4 text-[0.72rem] text-muted">
+        <span className="relative h-4 text-xs text-muted">
           {ticks.map((y) => (
             <span key={y} className="absolute -translate-x-1/2" style={{ left: `${pos(y) + 50 / span}%` }}>{y}</span>
           ))}

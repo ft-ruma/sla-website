@@ -82,7 +82,7 @@ export default async function RankingsPage({ params, searchParams }: Props) {
           {groups.map((g) => (
             // phones: one row per group that scrolls sideways; larger screens: label column and wrapping chips
             <div key={g.c} className="-mx-5 flex items-center gap-2 overflow-x-auto px-5 [scrollbar-width:none] sm:mx-0 sm:items-baseline sm:gap-4 sm:overflow-visible sm:px-0">
-              <p className="shrink-0 text-[0.72rem] font-bold tracking-[0.1em] text-muted uppercase sm:w-36">
+              <p className="shrink-0 text-xs font-bold tracking-[0.1em] text-muted uppercase sm:w-36">
                 {t[`rankCat_${g.c}` as keyof Dict] ?? g.c}
               </p>
               <div className="flex shrink-0 gap-1.5 sm:shrink sm:flex-wrap">

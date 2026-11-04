@@ -27,7 +27,7 @@ const BUTTON = "inline-flex h-11 items-center justify-center gap-2 bg-night px-4
 const SMALL = "inline-flex h-9 items-center justify-center gap-1.5 px-3 text-xs font-bold";
 const GHOST = `${SMALL} border border-line hover:border-ink`;
 const DARK = `${SMALL} bg-night text-white hover:bg-accent`;
-const KICKER = "text-[0.7rem] font-bold tracking-[0.18em] text-accent uppercase";
+const KICKER = "text-xs font-bold tracking-[0.18em] text-accent uppercase";
 
 const EXTRA_EVENTS: Record<string, string> = {
   "3000m": "3000m", RW: "Race walk", HM: "Half marathon", XC: "Cross country", "4x400mX": "4×400m mixed relay",
@@ -131,7 +131,7 @@ export function RecordHero({ lang, t, r, d, email }: {
               <span className="font-mono font-bold tracking-wider text-gold">{r.slaa_id}</span>
               {r.status === "verified"
                 ? <Badge tone="gold"><BadgeCheck className="size-3.5" aria-hidden /> {t.accountVerifiedBadge}</Badge>
-                : <span className="border border-white/30 px-2 py-0.5 text-[0.72rem] font-bold tracking-wider uppercase">{t.accountPendingBadge}</span>}
+                : <span className="border border-white/30 px-2 py-0.5 text-xs font-bold tracking-wider uppercase">{t.accountPendingBadge}</span>}
               {d?.is_athlete && <Badge tone="blue">{t.roleAthlete}</Badge>}
               {d?.is_coach && <Badge tone="blue">{t.roleCoach}</Badge>}
             </p>
@@ -142,7 +142,7 @@ export function RecordHero({ lang, t, r, d, email }: {
           <div className="flex items-center gap-5 border border-white/15 bg-white/[0.04] p-4">
             <ScoreRing value={score} label={`${t.dashProfileTitle}: ${Math.round(score * 100)}%`} />
             <div>
-              <p className="text-[0.72rem] font-bold tracking-[0.14em] text-white/55 uppercase">{t.dashProfileTitle}</p>
+              <p className="text-xs font-bold tracking-[0.14em] text-white/55 uppercase">{t.dashProfileTitle}</p>
               <ul className="mt-2 flex flex-col gap-1 text-xs">
                 {checks.map(([label, ok]) => (
                   <li key={label} className={`flex items-center gap-1.5 ${ok ? "text-white" : "text-white/45"}`}>
@@ -160,7 +160,7 @@ export function RecordHero({ lang, t, r, d, email }: {
           <dl className="grid grid-cols-2 gap-px bg-white/10 lg:grid-cols-4">
             {tiles.map((k) => (
               <div key={k.label} className="bg-night p-4 sm:p-5">
-                <dt className="text-[0.72rem] font-bold tracking-[0.14em] text-white/55 uppercase">{k.label}</dt>
+                <dt className="text-xs font-bold tracking-[0.14em] text-white/55 uppercase">{k.label}</dt>
                 <dd className="mt-2 text-3xl font-black tabular-nums sm:text-4xl">{k.value}</dd>
                 {k.sub && <dd className="mt-1 text-xs text-white/60">{k.sub}</dd>}
               </div>
@@ -462,7 +462,7 @@ function Leaderboard({ lang, t, c }: { lang: Lang; t: Dict; c: CoachView }) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-left text-sm">
-        <thead className="text-[0.72rem] tracking-[0.14em] text-muted uppercase">
+        <thead className="text-xs tracking-[0.14em] text-muted uppercase">
           <tr className="border-b border-ink">
             <th className="py-2 pr-3">#</th><th className="py-2 pr-3">{t.dashAthlete}</th><th className="py-2 pr-3">{t.dashBestEvent}</th>
             <th className="py-2 pr-3">{t.dashPb}</th><th className="py-2">{t.dashNational}</th>
@@ -590,7 +590,7 @@ function PastAndTimeline({ lang, t, d, c }: { lang: Lang; t: Dict; d: Dashboard;
       <Card className="flex flex-col p-5 sm:p-6">
         <h3 className="flex items-center justify-between gap-3 text-xs font-bold tracking-[0.14em] text-muted uppercase">
           {t.dashPastTitle}
-          {waiting > 0 && <span className="bg-gold px-2 py-0.5 text-[0.7rem] text-night tabular-nums">{fill(t.dashPastWaiting, { count: String(waiting) })}</span>}
+          {waiting > 0 && <span className="bg-gold px-2 py-0.5 text-xs text-night tabular-nums">{fill(t.dashPastWaiting, { count: String(waiting) })}</span>}
         </h3>
         <p className="mt-1 mb-3 text-sm text-muted">{t.dashPastHint}</p>
         {past.length ? (
