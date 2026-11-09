@@ -2,7 +2,7 @@ import {
   BadgeCheck, Check, CircleCheck, Clock, EyeOff, Search, Send, TrendingDown, TrendingUp, Trophy, UserCheck,
   Users, X,
 } from "lucide-react";
-import { Badge, Card, Notice } from "@/components/bits";
+import { Badge, Notice } from "@/components/bits";
 import * as act from "@/lib/dashboard-actions";
 import type { Dict } from "@/lib/dict/en";
 import { districtName } from "@/lib/districts";
@@ -22,12 +22,13 @@ import { Container } from "./PageHero";
 // performance, coach, squad and privacy sections. Server-rendered; the forms
 // post to the actions in lib/dashboard-actions.ts.
 
-const INPUT = "h-11 w-full border border-line bg-white px-3 text-sm outline-none focus:border-ink";
-const BUTTON = "inline-flex h-11 items-center justify-center gap-2 bg-night px-4 text-sm font-bold text-white hover:bg-accent";
-const SMALL = "inline-flex h-9 items-center justify-center gap-1.5 px-3 text-xs font-bold";
-const GHOST = `${SMALL} border border-line hover:border-ink`;
-const DARK = `${SMALL} bg-night text-white hover:bg-accent`;
+const INPUT = "dash-input";
+const BUTTON = "dash-btn";
+const SMALL = "inline-flex h-9 items-center justify-center gap-1.5 rounded-full px-3 text-xs font-bold";
+const GHOST = "dash-btn-ghost";
+const DARK = "dash-btn";
 const KICKER = "text-xs font-bold tracking-[0.18em] text-accent uppercase";
+const PANEL = "dash-panel p-5 sm:p-6";
 
 const EXTRA_EVENTS: Record<string, string> = {
   "3000m": "3000m", RW: "Race walk", HM: "Half marathon", XC: "Cross country", "4x400mX": "4×400m mixed relay",
@@ -55,12 +56,26 @@ function SectionHead({ id, kicker, title, intro, icon }: {
   id: string; kicker: string; title: string; intro?: string; icon: React.ReactNode;
 }) {
   return (
-    <div id={id} className="scroll-mt-28">
+    <div id={id} className="scroll-mt-28 dash-rise">
       <p className={KICKER}>{kicker}</p>
-      <h2 className="mt-1 flex items-center gap-2.5 text-2xl font-bold sm:text-3xl">{icon}{title}</h2>
-      {intro && <p className="mt-1.5 max-w-2xl text-sm text-muted">{intro}</p>}
+      <h2 className="mt-1.5 flex items-center gap-2.5 text-2xl font-bold tracking-tight sm:text-3xl">
+        <span className="grid size-10 place-items-center rounded-2xl bg-accent/10 text-accent sm:size-11">{icon}</span>
+        {title}
+      </h2>
+      {intro && <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">{intro}</p>}
     </div>
   );
+}
+
+function nextAction(t: Dict, status: MemberRecord["status"], d: Dashboard): string {
+  if (status !== "verified") return t.dashNextActionPending;
+  if (d.is_athlete && !d.coaches.some((c) => c.state === "active")) return t.dashNextActionCoach;
+  if (d.is_athlete && d.marks.some((m) => m.status === "pending")) {
+    return fill(t.dashInsightWaiting, { count: String(d.marks.filter((m) => m.status === "pending").length) });
+  }
+  if (d.is_athlete && d.events.some((e) => e.pb && !e.verified)) return t.dashNextActionVerify;
+  if (d.is_athlete && !d.events.some((e) => e.pb)) return t.dashNextActionMark;
+  return t.dashNextActionDone;
 }
 
 /** The best place among an athlete's events, by share of the field. */
@@ -113,69 +128,86 @@ export function RecordHero({ lang, t, r, d, email }: {
   if (d) nav.push([`privacy-${r.slaa_id}`, t.dashNavPrivacy]);
   nav.push([`details-${r.slaa_id}`, t.dashNavDetails]);
 
+  const insights: string[] = [];
+  if (d?.is_athlete) {
+    const waiting = d.marks.filter((m) => m.status === "pending").length;
+    if (waiting) insights.push(fill(t.dashInsightWaiting, { count: String(waiting) }));
+    const best = bestEvent(d.events);
+    if (best) insights.push(fill(t.dashInsightBest, { event: eventLabel(lang, best.code), pct: String(topPercent(best.place!, best.field!)) }));
+  }
+
   return (
     <section className="relative overflow-hidden bg-night text-white">
-      {/* running-track lanes as a quiet texture */}
-      <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/2 opacity-[0.07] md:block"
+      <div aria-hidden className="pointer-events-none absolute -top-24 -right-16 size-72 rounded-full bg-accent/25 blur-3xl" />
+      <div aria-hidden className="pointer-events-none absolute -bottom-28 left-10 size-64 rounded-full bg-brand/20 blur-3xl" />
+      <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/2 opacity-[0.05] md:block"
         style={{ backgroundImage: "repeating-linear-gradient(115deg, #fff 0 2px, transparent 2px 46px)" }} />
-      <Container className="relative flex flex-col gap-8 py-10 sm:py-14">
+      <Container className="relative flex flex-col gap-7 py-10 sm:py-12">
         <div className="flex flex-col justify-between gap-8 lg:flex-row lg:items-center">
-        <div className="flex items-center gap-5">
-          <span className="flex size-16 shrink-0 items-center justify-center rounded-2xl bg-accent text-xl font-black sm:size-20 sm:text-2xl">
-            {initials(r.display_name)}
-          </span>
-          <div className="min-w-0">
-            <p className={KICKER}>{t.accountTitle}</p>
-            <h1 className="mt-1 text-3xl font-bold sm:text-5xl">{r.display_name}</h1>
-            <p className="mt-2 flex flex-wrap items-center gap-2 text-sm">
-              <span className="font-mono font-bold tracking-wider text-gold">{r.slaa_id}</span>
-              {r.status === "verified"
-                ? <Badge tone="gold"><BadgeCheck className="size-3.5" aria-hidden /> {t.accountVerifiedBadge}</Badge>
-                : <span className="border border-white/30 px-2 py-0.5 text-xs font-bold tracking-wider uppercase">{t.accountPendingBadge}</span>}
-              {d?.is_athlete && <Badge tone="blue">{t.roleAthlete}</Badge>}
-              {d?.is_coach && <Badge tone="blue">{t.roleCoach}</Badge>}
-            </p>
-            {email && <p className="mt-2 text-xs text-white/60">{fill(t.accountSignedInAs, { email })}</p>}
-          </div>
-        </div>
-        {checks.length > 0 && (
-          <div className="flex items-center gap-5 border border-white/15 bg-white/[0.04] p-4">
-            <ScoreRing value={score} label={`${t.dashProfileTitle}: ${Math.round(score * 100)}%`} />
-            <div>
-              <p className="text-xs font-bold tracking-[0.14em] text-white/55 uppercase">{t.dashProfileTitle}</p>
-              <ul className="mt-2 flex flex-col gap-1 text-xs">
-                {checks.map(([label, ok]) => (
-                  <li key={label} className={`flex items-center gap-1.5 ${ok ? "text-white" : "text-white/45"}`}>
-                    {ok ? <Check className="size-3.5 text-gold" aria-hidden /> : <span className="inline-block size-3.5 border border-white/40" aria-hidden />}
-                    {label}
-                  </li>
-                ))}
-              </ul>
+          <div className="flex items-center gap-4 sm:gap-5">
+            <span className="flex size-16 shrink-0 items-center justify-center rounded-[1.35rem] bg-gradient-to-br from-accent to-[#c44a00] text-xl font-black shadow-lg shadow-accent/30 sm:size-[4.5rem] sm:text-2xl">
+              {initials(r.display_name)}
+            </span>
+            <div className="min-w-0">
+              <p className={KICKER}>{t.accountTitle}</p>
+              <h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-5xl">{r.display_name}</h1>
+              <p className="mt-2.5 flex flex-wrap items-center gap-2 text-sm">
+                <span className="rounded-full bg-white/10 px-2.5 py-1 font-mono text-xs font-bold tracking-wider text-gold">{r.slaa_id}</span>
+                {r.status === "verified"
+                  ? <Badge tone="gold"><BadgeCheck className="size-3.5" aria-hidden /> {t.accountVerifiedBadge}</Badge>
+                  : <span className="rounded-full border border-white/30 px-2.5 py-1 text-xs font-bold tracking-wider uppercase">{t.accountPendingBadge}</span>}
+                {d?.is_athlete && <Badge tone="blue">{t.roleAthlete}</Badge>}
+                {d?.is_coach && <Badge tone="blue">{t.roleCoach}</Badge>}
+              </p>
+              {email && <p className="mt-2 text-xs text-white/60">{fill(t.accountSignedInAs, { email })}</p>}
             </div>
           </div>
-        )}
+          {checks.length > 0 && (
+            <div className="flex items-center gap-5 rounded-[1.35rem] border border-white/12 bg-white/[0.05] p-4 backdrop-blur-sm">
+              <ScoreRing value={score} label={`${t.dashProfileTitle}: ${Math.round(score * 100)}%`} />
+              <div>
+                <p className="text-xs font-bold tracking-[0.14em] text-white/55 uppercase">{t.dashProfileTitle}</p>
+                <ul className="mt-2 flex flex-col gap-1.5 text-xs">
+                  {checks.map(([label, ok]) => (
+                    <li key={label} className={`flex items-center gap-1.5 ${ok ? "text-white" : "text-white/40"}`}>
+                      {ok ? <Check className="size-3.5 text-gold" aria-hidden /> : <span className="inline-block size-3.5 rounded-sm border border-white/35" aria-hidden />}
+                      {label}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
         </div>
 
+        {insights.length > 0 && (
+          <div className="dash-insight">
+            {insights.map((tip) => (
+              <span key={tip} className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/90">{tip}</span>
+            ))}
+          </div>
+        )}
+
         {tiles.length > 0 && (
-          <dl className="grid grid-cols-2 gap-px bg-white/10 lg:grid-cols-4">
+          <dl className="dash-kpi">
             {tiles.map((k) => (
-              <div key={k.label} className="bg-night p-4 sm:p-5">
-                <dt className="text-xs font-bold tracking-[0.14em] text-white/55 uppercase">{k.label}</dt>
-                <dd className="mt-2 text-3xl font-black tabular-nums sm:text-4xl">{k.value}</dd>
+              <div key={k.label}>
+                <dt className="text-[0.68rem] font-bold tracking-[0.14em] text-white/55 uppercase">{k.label}</dt>
+                <dd className="mt-2 text-3xl font-black tracking-tight tabular-nums sm:text-4xl">{k.value}</dd>
                 {k.sub && <dd className="mt-1 text-xs text-white/60">{k.sub}</dd>}
               </div>
             ))}
           </dl>
         )}
 
-        <nav aria-label={r.display_name} className="-mx-1 flex gap-2 overflow-x-auto px-1">
-          {nav.map(([id, label]) => (
-            <a key={id} href={`#${id}`}
-              className="shrink-0 border border-white/25 px-3.5 py-1.5 text-xs font-bold tracking-wider uppercase hover:border-accent hover:text-accent">
-              {label}
-            </a>
-          ))}
-        </nav>
+        <div>
+          <p className="mb-2 text-[0.68rem] font-bold tracking-[0.14em] text-white/45 uppercase">{t.dashJumpTo}</p>
+          <nav aria-label={r.display_name} className="dash-nav">
+            {nav.map(([id, label]) => (
+              <a key={id} href={`#${id}`}>{label}</a>
+            ))}
+          </nav>
+        </div>
       </Container>
     </section>
   );
@@ -197,15 +229,15 @@ function EventCard({ lang, t, e, marks, slaaId }: { lang: Lang; t: Dict; e: Even
   const rankText = ranked ? fill(t.dashChartRankTip, { event: name, place: String(e.place), field: String(e.field) }) : "";
 
   return (
-    <Card className="flex flex-col gap-5 p-5 sm:p-6">
+    <article className={`${PANEL} flex flex-col gap-5 dash-rise`}>
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="text-xs font-bold tracking-[0.16em] text-muted uppercase">{name}</p>
           {e.pb ? (
             <>
               <p className="mt-1 font-mono text-4xl font-black tracking-tight sm:text-5xl">{e.pb}</p>
-              <p className="mt-1 text-xs text-muted">{[e.pb_year, e.competition].filter(Boolean).join(" · ")}</p>
-              <div className="mt-2">
+              <p className="mt-1.5 text-xs text-muted">{[e.pb_year, e.competition].filter(Boolean).join(" · ")}</p>
+              <div className="mt-2.5">
                 {e.verified
                   ? <Badge tone="gold"><BadgeCheck className="size-3.5" aria-hidden /> {t.dashPbVerified}</Badge>
                   : <Badge tone="grey"><Clock className="size-3.5" aria-hidden /> {t.dashPbUnverified}</Badge>}
@@ -213,54 +245,60 @@ function EventCard({ lang, t, e, marks, slaaId }: { lang: Lang; t: Dict; e: Even
             </>
           ) : <p className="mt-2 text-lg font-bold text-muted">{t.dashNoPb}</p>}
         </div>
-        {ranked && (
-          <div className="flex flex-col items-center text-center">
+        {ranked ? (
+          <div className="flex flex-col items-center rounded-2xl bg-sand/80 px-3 py-2 text-center">
             <RankRing place={e.place!} field={e.field!} label={rankText} />
             <p className="mt-1 text-xs text-muted">{fill(t.dashFieldOf, { field: String(e.field) })}</p>
-            <p className="text-xs font-bold">{fill(t.dashTopPct, { pct: String(topPercent(e.place!, e.field!)) })}</p>
+            <p className="text-xs font-bold text-accent">{fill(t.dashTopPct, { pct: String(topPercent(e.place!, e.field!)) })}</p>
           </div>
+        ) : (
+          <p className="max-w-28 text-right text-xs text-muted">{t.dashEmptyRank}</p>
         )}
       </div>
 
-      {e.pb && e.dist && e.place && e.dist.length >= 3 && markValue(e.pb) !== null && (
-        <div className="border-t border-line pt-4">
-          <p className="mb-2 text-xs font-bold tracking-[0.12em] text-muted uppercase">{t.dashFieldTitle}</p>
-          <FieldHistogram code={e.code} dist={e.dist} mine={markValue(e.pb)!} place={e.place} t={t} />
-        </div>
-      )}
-
-      {points.length >= 2 ? (
-        <div className="border-t border-line pt-4">
-          <p className="mb-1 text-xs font-bold tracking-[0.12em] text-muted uppercase">{t.dashProgressTitle}</p>
-          <TrendChart code={e.code} points={points} label={`${name}: ${points.map((p) => `${p.year} ${p.mark}`).join(", ")}`} />
-          {change && (
-            <p className={`mt-1 flex items-center gap-1.5 text-sm font-bold ${change.better ? "text-emerald-700" : "text-clay"}`}>
-              {change.better ? <TrendingUp className="size-4" aria-hidden /> : <TrendingDown className="size-4" aria-hidden />}
-              {change.text}
-            </p>
+      {(e.pb && e.dist && e.place && e.dist.length >= 3 && markValue(e.pb) !== null) || points.length >= 2 ? (
+        <div className="rounded-2xl bg-sand/70 p-4">
+          <p className="mb-3 text-xs font-bold tracking-[0.12em] text-muted uppercase">{t.dashAnalysisTitle}</p>
+          {e.pb && e.dist && e.place && e.dist.length >= 3 && markValue(e.pb) !== null && (
+            <div className="mb-4 last:mb-0">
+              <p className="mb-2 text-xs font-semibold text-ink/70">{t.dashFieldTitle}</p>
+              <FieldHistogram code={e.code} dist={e.dist} mine={markValue(e.pb)!} place={e.place} t={t} />
+            </div>
           )}
+          {points.length >= 2 ? (
+            <div>
+              <p className="mb-1 text-xs font-semibold text-ink/70">{t.dashProgressTitle}</p>
+              <TrendChart code={e.code} points={points} label={`${name}: ${points.map((p) => `${p.year} ${p.mark}`).join(", ")}`} />
+              {change && (
+                <p className={`mt-2 flex items-center gap-1.5 text-sm font-bold ${change.better ? "text-emerald-700" : "text-clay"}`}>
+                  {change.better ? <TrendingUp className="size-4" aria-hidden /> : <TrendingDown className="size-4" aria-hidden />}
+                  {change.text}
+                </p>
+              )}
+            </div>
+          ) : e.pb ? <p className="text-xs text-muted">{t.dashTrendEmpty}</p> : null}
         </div>
-      ) : e.pb && <p className="border-t border-line pt-4 text-xs text-muted">{t.dashTrendEmpty}</p>}
+      ) : null}
 
       {waiting && (
-        <div className="flex flex-wrap items-center justify-between gap-2 bg-gold/25 px-3 py-2 text-sm">
-          <span className="flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-gold/30 px-3.5 py-2.5 text-sm">
+          <span className="flex items-center gap-1.5 font-semibold">
             <Clock className="size-4" aria-hidden />
             {fill(t.dashWaitingFor, { mark: waiting.mark, year: String(waiting.year) })}
           </span>
           <form action={act.withdrawMark}>
             <Hidden lang={lang} slaaId={slaaId} />
             <input type="hidden" name="markId" value={waiting.id} />
-            <button className={`${SMALL} underline underline-offset-2 hover:text-accent`}>{t.dashWithdraw}</button>
+            <button className="text-xs font-bold underline underline-offset-2 hover:text-accent">{t.dashWithdraw}</button>
           </form>
         </div>
       )}
-    </Card>
+    </article>
   );
 }
 
-export function AthleteDashboard({ lang, t, d, coachQuery, hits }: {
-  lang: Lang; t: Dict; d: Dashboard; coachQuery: string; hits: CoachHit[] | null;
+export function AthleteDashboard({ lang, t, d, status, coachQuery, hits }: {
+  lang: Lang; t: Dict; d: Dashboard; status: MemberRecord["status"]; coachQuery: string; hits: CoachHit[] | null;
 }) {
   const active = d.coaches.filter((c) => c.state === "active");
   const awaiting = d.coaches.filter((c) => c.state === "awaiting");
@@ -276,26 +314,40 @@ export function AthleteDashboard({ lang, t, d, coachQuery, hits }: {
   const eventCodes = [...new Set([...d.events.map((e) => e.code), ...EVENTS.map((e) => e.code)])];
   const year = new Date().getFullYear();
 
+  const focus = nextAction(t, status, d);
+
   return (
     <>
       <section className="flex flex-col gap-5">
+        <div className="dash-focus p-5 sm:p-6 dash-rise">
+          <p className={KICKER}>{t.dashFocusTitle}</p>
+          <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-bold tracking-[0.14em] text-muted uppercase">{t.dashNextAction}</p>
+              <p className="mt-1 text-lg font-bold tracking-tight sm:text-xl">{focus}</p>
+            </div>
+            <a href={`#send-${d.slaa_id}`} className={`${BUTTON} self-start`}>
+              <Send className="size-4" aria-hidden /> {t.dashSendMarkOpen}
+            </a>
+          </div>
+        </div>
+
         <SectionHead id={`perf-${d.slaa_id}`} kicker={t.dashNavPerformance} title={t.dashEventsTitle}
-          intro={t.dashEventsIntro} icon={<Trophy className="size-6 text-accent" aria-hidden />} />
+          intro={t.dashEventsIntro} icon={<Trophy className="size-5" aria-hidden />} />
         {(strength.length > 0 || activity.length > 0) && (
           <div className="grid gap-5 lg:grid-cols-[1.3fr_1fr]">
-            <Card className="p-5 sm:p-6">
+            <div className={PANEL}>
               <h3 className="text-xs font-bold tracking-[0.14em] text-muted uppercase">{t.dashStrengthTitle}</h3>
               <p className="mt-1 mb-4 text-sm text-muted">{t.dashStrengthHint}</p>
               {strength.length ? <StrengthBars rows={strength} /> : <p className="text-sm text-muted">{t.dashNoPb}</p>}
-            </Card>
-            <Card className="p-5 sm:p-6">
+            </div>
+            <div className={PANEL}>
               <h3 className="text-xs font-bold tracking-[0.14em] text-muted uppercase">{t.dashActivityTitle}</h3>
               {activity.length ? (
                 <ol className="mt-4 flex flex-col">
                   {activity.map((m) => (
                     <li key={m.id} className="relative flex gap-3 pb-4 pl-1 last:pb-0">
-                      <span className="absolute top-3 bottom-0 left-[0.6rem] w-px bg-line last:hidden" aria-hidden />
-                      <span className={`relative mt-1 size-3 shrink-0 ring-4 ring-white ${
+                      <span className={`relative mt-1 size-3 shrink-0 rounded-full ring-4 ring-white ${
                         { pending: "bg-gold", approved: "bg-emerald-600", rejected: "bg-clay", withdrawn: "bg-black/25" }[m.status]}`} aria-hidden />
                       <span className="text-sm">
                         <strong>{eventLabel(lang, m.event)}</strong> <span className="font-mono font-bold">{m.mark}</span>
@@ -308,7 +360,7 @@ export function AthleteDashboard({ lang, t, d, coachQuery, hits }: {
                   ))}
                 </ol>
               ) : <p className="mt-3 text-sm text-muted">{t.dashActivityEmpty}</p>}
-            </Card>
+            </div>
           </div>
         )}
         {d.events.length ? (
@@ -318,36 +370,36 @@ export function AthleteDashboard({ lang, t, d, coachQuery, hits }: {
         ) : <Notice>{t.dashNoEvents}</Notice>}
         <p className="text-xs text-muted">{t.dashRankNote}</p>
 
-        <details className="card border-l-4 border-accent p-5 sm:p-6">
-          <summary className="flex cursor-pointer items-center gap-2 font-bold select-none">
+        <div id={`send-${d.slaa_id}`} className={`${PANEL} scroll-mt-28 border-l-4 border-accent`}>
+          <h3 className="flex items-center gap-2 text-lg font-bold">
             <Send className="size-4 text-accent" aria-hidden /> {t.dashSendMark}
-          </summary>
+          </h3>
           <p className="mt-2 text-sm text-muted">{active.length ? t.dashSendMarkIntro : t.dashSendMarkNoCoach}</p>
-          <form action={act.sendMark} className="mt-4 grid gap-3 sm:grid-cols-4">
+          <form action={act.sendMark} className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <Hidden lang={lang} slaaId={d.slaa_id} />
-            <label className="flex flex-col gap-1 text-xs font-bold tracking-wider uppercase">
+            <label className="flex flex-col gap-1.5 text-xs font-bold tracking-wider uppercase">
               {t.dashEvent}
               <select name="event" required className={INPUT} defaultValue={d.events[0]?.code}>
                 {eventCodes.map((c) => <option key={c} value={c}>{eventLabel(lang, c)}</option>)}
               </select>
             </label>
-            <label className="flex flex-col gap-1 text-xs font-bold tracking-wider uppercase">
+            <label className="flex flex-col gap-1.5 text-xs font-bold tracking-wider uppercase">
               {t.dashMark}
               <input name="mark" required inputMode="decimal" maxLength={12} placeholder="10.85" className={`${INPUT} font-mono`} />
             </label>
-            <label className="flex flex-col gap-1 text-xs font-bold tracking-wider uppercase">
+            <label className="flex flex-col gap-1.5 text-xs font-bold tracking-wider uppercase">
               {t.dashYear}
               <input name="year" type="number" required min={1950} max={year} defaultValue={year} className={INPUT} />
             </label>
-            <label className="flex flex-col gap-1 text-xs font-bold tracking-wider uppercase">
+            <label className="flex flex-col gap-1.5 text-xs font-bold tracking-wider uppercase">
               {t.dashCompetition}
               <input name="competition" maxLength={120} className={INPUT} />
             </label>
-            <button className={`${BUTTON} sm:col-span-4 sm:justify-self-start`}>
+            <button className={`${BUTTON} sm:col-span-2 lg:col-span-4 sm:justify-self-start`}>
               <Send className="size-4" aria-hidden /> {t.dashSendMarkButton}
             </button>
           </form>
-        </details>
+        </div>
       </section>
 
       <section className="flex flex-col gap-5">
@@ -357,8 +409,8 @@ export function AthleteDashboard({ lang, t, d, coachQuery, hits }: {
         {(active.length > 0 || awaiting.length > 0) && (
           <div className="grid gap-4 md:grid-cols-2">
             {[...active, ...awaiting].map((c) => (
-              <Card key={c.link} className="flex items-center gap-4 p-5">
-                <span className={`flex size-12 shrink-0 items-center justify-center rounded-xl text-sm font-black ${c.state === "active" ? "bg-night text-white" : "bg-line text-muted"}`}>
+              <div key={c.link} className={`${PANEL} flex items-center gap-4`}>
+                <span className={`flex size-12 shrink-0 items-center justify-center rounded-2xl text-sm font-black ${c.state === "active" ? "bg-night text-white" : "bg-line text-muted"}`}>
                   {initials(c.name)}
                 </span>
                 <div className="min-w-0 flex-1">
@@ -377,7 +429,7 @@ export function AthleteDashboard({ lang, t, d, coachQuery, hits }: {
                     )}
                   </div>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
         )}
@@ -387,19 +439,19 @@ export function AthleteDashboard({ lang, t, d, coachQuery, hits }: {
           </p>
         )}
 
-        <Card className="p-5 sm:p-6">
+        <div className={PANEL}>
           <h3 className="font-bold">{active.length ? t.dashChangeCoach : t.dashChooseCoach}</h3>
           <p className="mt-1 text-sm text-muted">{active.length ? t.dashChangeCoachIntro : t.dashChooseCoachIntro}</p>
-          <form method="get" action={`/${lang}/account#coach-${d.slaa_id}`} className="mt-4 flex gap-2">
+          <form method="get" action={`/${lang}/account#coach-${d.slaa_id}`} className="mt-4 flex flex-col gap-2 sm:flex-row">
             <input type="hidden" name="for" value={d.slaa_id} />
             <input name="coachq" defaultValue={coachQuery} minLength={2} maxLength={80} required
               placeholder={t.dashCoachSearchHint} aria-label={t.dashCoachSearchHint} className={INPUT} />
-            <button className={BUTTON}><Search className="size-4" aria-hidden /> {t.dashSearch}</button>
+            <button className={`${BUTTON} shrink-0`}><Search className="size-4" aria-hidden /> {t.dashSearch}</button>
           </form>
           {hits && (hits.length ? (
-            <ul className="mt-4 divide-y divide-line border border-line">
+            <ul className="mt-4 divide-y divide-line overflow-hidden rounded-2xl border border-line">
               {hits.map((h) => (
-                <li key={h.slaa_id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm">
+                <li key={h.slaa_id} className="flex flex-wrap items-center justify-between gap-3 bg-white px-4 py-3 text-sm">
                   <span className="flex items-center gap-3">
                     <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-line text-xs font-black">{initials(h.name)}</span>
                     <span>
@@ -431,7 +483,7 @@ export function AthleteDashboard({ lang, t, d, coachQuery, hits }: {
               ))}
             </ul>
           ) : <p className="mt-3 text-sm text-muted">{t.dashNoCoachFound}</p>)}
-        </Card>
+        </div>
       </section>
     </>
   );
@@ -473,8 +525,8 @@ function Leaderboard({ lang, t, c }: { lang: Lang; t: Dict; c: CoachView }) {
             <tr key={a.link}>
               <td className="py-3 pr-3 font-black tabular-nums">
                 {i < 3
-                  ? <span className={`inline-flex size-7 items-center justify-center ${podium[i]}`}>{i + 1}</span>
-                  : <span className="inline-flex size-7 items-center justify-center">{i + 1}</span>}
+                  ? <span className={`inline-flex size-7 items-center justify-center rounded-full ${podium[i]}`}>{i + 1}</span>
+                  : <span className="inline-flex size-7 items-center justify-center rounded-full text-muted">{i + 1}</span>}
               </td>
               <td className="py-3 pr-3">
                 <span className="font-bold">{a.name}</span>
@@ -529,13 +581,13 @@ function SquadInsights({ t, c }: { t: Dict; c: CoachView }) {
 
   return (
     <div className="grid gap-5 lg:grid-cols-[1.1fr_1fr]">
-      <Card className="p-5 sm:p-6">
+      <div className={PANEL}>
         <h3 className="text-xs font-bold tracking-[0.14em] text-muted uppercase">{t.dashGroupTitle}</h3>
         <div className="mt-4">
           <Donut slices={slices} total={c.athletes.length} centerLabel={t.dashAthletesShort} />
         </div>
-      </Card>
-      <Card className="flex flex-col gap-6 p-5 sm:p-6">
+      </div>
+      <div className={`${PANEL} flex flex-col gap-6`}>
         <div>
           <h3 className="mb-3 text-xs font-bold tracking-[0.14em] text-muted uppercase">{t.dashVerifyTitle}</h3>
           <SplitBar parts={[
@@ -554,7 +606,7 @@ function SquadInsights({ t, c }: { t: Dict; c: CoachView }) {
             <p className="text-sm"><span className="text-2xl font-black tabular-nums">{women}</span> {t.genderF}</p>
           </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }
@@ -575,7 +627,7 @@ function PastAndTimeline({ lang, t, d, c }: { lang: Lang; t: Dict; d: Dashboard;
   if (!stints.length && !past.length) return null;
   return (
     <div className="grid gap-5 lg:grid-cols-2">
-      <Card className="p-5 sm:p-6">
+      <div className={PANEL}>
         <h3 className="text-xs font-bold tracking-[0.14em] text-muted uppercase">{t.dashTimelineTitle}</h3>
         <p className="mt-1 mb-4 text-sm text-muted">{t.dashTimelineHint}</p>
         {stints.length ? (
@@ -585,12 +637,12 @@ function PastAndTimeline({ lang, t, d, c }: { lang: Lang; t: Dict; d: Dashboard;
         {undated > 0 && stints.length > 0 && (
           <p className="mt-3 text-xs text-muted">{fill(t.dashTimelineNoYear, { count: String(undated) })}</p>
         )}
-      </Card>
+      </div>
 
-      <Card className="flex flex-col p-5 sm:p-6">
+      <div className={`${PANEL} flex flex-col`}>
         <h3 className="flex items-center justify-between gap-3 text-xs font-bold tracking-[0.14em] text-muted uppercase">
           {t.dashPastTitle}
-          {waiting > 0 && <span className="bg-gold px-2 py-0.5 text-xs text-night tabular-nums">{fill(t.dashPastWaiting, { count: String(waiting) })}</span>}
+          {waiting > 0 && <span className="rounded-full bg-gold px-2.5 py-0.5 text-xs text-night tabular-nums">{fill(t.dashPastWaiting, { count: String(waiting) })}</span>}
         </h3>
         <p className="mt-1 mb-3 text-sm text-muted">{t.dashPastHint}</p>
         {past.length ? (
@@ -639,7 +691,7 @@ function PastAndTimeline({ lang, t, d, c }: { lang: Lang; t: Dict; d: Dashboard;
             ))}
           </ul>
         ) : <p className="text-sm text-muted">{t.dashPastEmpty}</p>}
-      </Card>
+      </div>
     </div>
   );
 }
@@ -649,12 +701,12 @@ export function CoachDashboard({ lang, t, d }: { lang: Lang; t: Dict; d: Dashboa
   return (
     <section className="flex flex-col gap-5">
       <SectionHead id={`squad-${d.slaa_id}`} kicker={t.dashNavSquad} title={t.dashNeedsYou}
-        icon={<Users className="size-6 text-accent" aria-hidden />} />
+        icon={<Users className="size-5" aria-hidden />} />
       <div className="grid gap-5 lg:grid-cols-2">
-        <Card className="flex flex-col gap-4 border-t-4 border-t-accent p-5 sm:p-6">
+        <div className={`${PANEL} flex flex-col gap-4 border-t-4 border-t-accent`}>
           <h3 className="flex items-center justify-between gap-3 font-bold">
             {t.dashRequestsTitle}
-            <span className="bg-night px-2 py-0.5 text-xs text-white tabular-nums">{c.requests.length}</span>
+            <span className="rounded-full bg-night px-2.5 py-0.5 text-xs text-white tabular-nums">{c.requests.length}</span>
           </h3>
           {c.requests.length ? (
             <ul className="flex flex-col divide-y divide-line">
@@ -686,12 +738,12 @@ export function CoachDashboard({ lang, t, d }: { lang: Lang; t: Dict; d: Dashboa
               ))}
             </ul>
           ) : <AllClear t={t} />}
-        </Card>
+        </div>
 
-        <Card className="flex flex-col gap-4 border-t-4 border-t-gold p-5 sm:p-6">
+        <div className={`${PANEL} flex flex-col gap-4 border-t-4 border-t-gold`}>
           <h3 className="flex items-center justify-between gap-3 font-bold">
             {t.dashMarksTitle}
-            <span className="bg-night px-2 py-0.5 text-xs text-white tabular-nums">{c.marks.length}</span>
+            <span className="rounded-full bg-night px-2.5 py-0.5 text-xs text-white tabular-nums">{c.marks.length}</span>
           </h3>
           {c.marks.length ? (
             <ul className="flex flex-col divide-y divide-line">
@@ -717,7 +769,7 @@ export function CoachDashboard({ lang, t, d }: { lang: Lang; t: Dict; d: Dashboa
                       <input type="hidden" name="markId" value={m.id} />
                       <input type="hidden" name="decision" value="decline" />
                       <input name="note" maxLength={500} placeholder={t.dashRejectReason} aria-label={t.dashRejectReason}
-                        className="h-9 w-40 border border-line px-2 text-xs" />
+                        className="dash-input h-9 w-44 text-xs" />
                       <button className={GHOST}>{t.dashRejectMark}</button>
                     </form>
                   </div>
@@ -725,19 +777,19 @@ export function CoachDashboard({ lang, t, d }: { lang: Lang; t: Dict; d: Dashboa
               ))}
             </ul>
           ) : <AllClear t={t} />}
-        </Card>
+        </div>
       </div>
 
       {c.athletes.length > 0 && <SquadInsights t={t} c={c} />}
 
-      <Card className="flex flex-col gap-4 p-5 sm:p-6">
+      <div className={`${PANEL} flex flex-col gap-4`}>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h3 className="flex items-center gap-2 text-lg font-bold"><Trophy className="size-5 text-accent" aria-hidden /> {t.dashSquadTitle}</h3>
           <p className="text-xs text-muted">{fill(t.dashPastAthletes, { count: String(c.past_count) })}</p>
         </div>
         <p className="-mt-2 text-sm text-muted">{t.dashSquadHint}</p>
         {c.athletes.length ? <Leaderboard lang={lang} t={t} c={c} /> : <p className="text-sm text-muted">{t.dashNoAthletes}</p>}
-      </Card>
+      </div>
 
       <PastAndTimeline lang={lang} t={t} d={d} c={c} />
 
@@ -745,7 +797,7 @@ export function CoachDashboard({ lang, t, d }: { lang: Lang; t: Dict; d: Dashboa
         <div className="flex flex-col gap-2">
           <h3 className="text-xs font-bold tracking-[0.16em] text-muted uppercase">{t.dashAthleteDetails}</h3>
           {c.athletes.map((a) => (
-            <details key={a.link} className="card overflow-hidden">
+            <details key={a.link} className="dash-panel overflow-hidden">
               <summary className="flex cursor-pointer items-center gap-3 px-4 py-3 select-none">
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-night text-xs font-black text-white">{initials(a.full_name)}</span>
                 <span className="flex-1 text-sm">
@@ -805,25 +857,24 @@ export function PrivacyCard({ lang, t, d }: { lang: Lang; t: Dict; d: Dashboard 
   ];
   return (
     <div id={`privacy-${d.slaa_id}`} className="scroll-mt-28">
-      <Card className="flex h-full flex-col p-5 sm:p-6">
+      <div className={`${PANEL} flex h-full flex-col`}>
         <h2 className="flex items-center gap-2 text-lg font-bold"><EyeOff className="size-5 text-accent" aria-hidden /> {t.dashPrivacyTitle}</h2>
         <p className="mt-1 text-sm text-muted">{t.dashPrivacyIntro}</p>
         <form action={act.savePrivacy} className="mt-4 flex flex-col">
           <Hidden lang={lang} slaaId={d.slaa_id} />
           {options.map(([key, label]) => (
-            <label key={key} className="flex cursor-pointer items-center justify-between gap-4 border-b border-line py-3 text-sm last:border-0">
-              {label}
-              {/* a switch drawn around a real checkbox, so it still works without CSS */}
+            <label key={key} className="flex cursor-pointer items-center justify-between gap-4 border-b border-line py-3.5 text-sm last:border-0">
+              <span className="pr-3 leading-snug">{label}</span>
               <span className="relative inline-flex shrink-0">
                 <input type="checkbox" name={key} defaultChecked={!!d.privacy[key]} className="peer sr-only" />
-                <span className="h-6 w-11 bg-black/20 transition-colors peer-checked:bg-accent peer-focus-visible:outline-2 peer-focus-visible:outline-accent" />
-                <span className="absolute top-1 left-1 size-4 bg-white transition-transform peer-checked:translate-x-5" />
+                <span className="h-7 w-12 rounded-full bg-black/15 transition-colors peer-checked:bg-accent peer-focus-visible:outline-2 peer-focus-visible:outline-accent" />
+                <span className="absolute top-1 left-1 size-5 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-5" />
               </span>
             </label>
           ))}
-          <button className={`${BUTTON} mt-4 self-start`}>{t.dashSavePrivacy}</button>
+          <button className={`${BUTTON} mt-5 self-start`}>{t.dashSavePrivacy}</button>
         </form>
-      </Card>
+      </div>
     </div>
   );
 }

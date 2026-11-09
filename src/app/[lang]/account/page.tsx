@@ -1,6 +1,6 @@
 import { ChevronDown, IdCard, LogOut, ShieldCheck } from "lucide-react";
 import { redirect } from "next/navigation";
-import { Card, Notice } from "@/components/bits";
+import { Notice } from "@/components/bits";
 import { ChangePassword } from "@/components/MemberForms";
 import { AthleteDashboard, CoachDashboard, PrivacyCard, RecordHero } from "@/components/Dashboard";
 import type { DashMessage } from "@/lib/dashboard-actions";
@@ -59,21 +59,23 @@ export default async function AccountPage({
       {records.map((r) => {
         const d = boards.get(r.slaa_id);
         return (
-          <div key={r.slaa_id} id={`r-${r.slaa_id}`} className="scroll-mt-20 border-b-4 border-accent last:border-b-0">
+          <div key={r.slaa_id} id={`r-${r.slaa_id}`} className="scroll-mt-20 border-b border-line last:border-b-0">
             <RecordHero lang={lang} t={t} r={r} d={d} email={multiple ? null : member.email} />
-            <Container className="flex flex-col gap-14 py-10 sm:py-14">
+            <div className="dash-shell">
+            <Container className="flex flex-col gap-12 py-10 sm:gap-14 sm:py-14">
               {message && s.r === r.slaa_id && (
                 <p role={GOOD.includes(message) ? "status" : "alert"}
-                  className={`flex items-center gap-2 border-l-4 px-4 py-3 text-sm font-semibold ${GOOD.includes(message) ? "border-emerald-600 bg-emerald-50 text-emerald-900" : "border-clay bg-red-50 text-red-800"}`}>
+                  className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold ${GOOD.includes(message) ? "dash-toast-ok" : "dash-toast-err"}`}>
                   {t[`dashMsg_${message}` as keyof Dict]}
                 </p>
               )}
               {d?.is_athlete && (
-                <AthleteDashboard lang={lang} t={t} d={d} coachQuery={s.for === r.slaa_id ? coachQuery : ""}
+                <AthleteDashboard lang={lang} t={t} d={d} status={r.status}
+                  coachQuery={s.for === r.slaa_id ? coachQuery : ""}
                   hits={s.for === r.slaa_id ? hits : null} />
               )}
               {d?.is_coach && d.coach && <CoachDashboard lang={lang} t={t} d={d} />}
-              <details id={`details-${r.slaa_id}`} className="group card scroll-mt-28 overflow-hidden" open={!d}>
+              <details id={`details-${r.slaa_id}`} className="group dash-panel scroll-mt-28 overflow-hidden" open={!d}>
                 <summary className="flex cursor-pointer items-center justify-between gap-3 px-5 py-4 font-bold select-none sm:px-6">
                   <span className="flex items-center gap-2"><IdCard className="size-5 text-accent" aria-hidden /> {t.dashDetailsTitle}</span>
                   <ChevronDown className="size-5 transition-transform group-open:rotate-180" aria-hidden />
@@ -82,26 +84,27 @@ export default async function AccountPage({
               </details>
               {d && <PrivacyCard lang={lang} t={t} d={d} />}
             </Container>
+            </div>
           </div>
         );
       })}
 
-      <section className="bg-white">
+      <section className="border-t border-line dash-shell">
         <Container className="grid gap-6 py-12 lg:grid-cols-[1.2fr_1fr]">
-          <Card className="p-6 sm:p-8">
+          <div className="dash-panel p-6 sm:p-8">
             <p className="text-xs font-bold tracking-[0.18em] text-accent uppercase">{t.dashSettingsTitle}</p>
             <h2 className="mt-1 text-lg font-bold">{t.passwordTitle}</h2>
             <p className="mt-1 mb-5 text-sm text-muted">{t.passwordChangeText}</p>
             <ChangePassword lang={lang} t={t} />
-          </Card>
-          <div className="flex flex-col justify-end gap-5">
+          </div>
+          <div className="dash-panel flex flex-col justify-end gap-5 bg-gradient-to-br from-white to-sand p-6">
             <p className="flex gap-3 text-sm text-muted">
               <ShieldCheck className="mt-0.5 size-5 shrink-0 text-brand" aria-hidden />
               {t.accountPrivate}
             </p>
             <form action={signOut}>
               <input type="hidden" name="lang" value={lang} />
-              <button type="submit" className="inline-flex h-11 items-center gap-2 border border-ink px-5 text-sm font-bold hover:bg-night hover:text-white">
+              <button type="submit" className="dash-btn-ghost border-ink/20">
                 <LogOut className="size-4" aria-hidden /> {t.signOut}
               </button>
             </form>
