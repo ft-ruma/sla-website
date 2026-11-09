@@ -458,6 +458,12 @@ export const ta: Dict = {
   dashKpiPbCount: "தனிப்பட்ட சிறந்தவை",
   dashFocusCta: "நடவடிக்கை எடு",
   dashNoTrendYet: "போக்கு விளக்கப்படத்திற்கு இரு ஆண்டுகளின் அடையாளங்களை அனுமதிக்கவும்.",
+  dashViewAnalytics: "விரிவான பகுப்பாய்வைக் காண்",
+  dashSearchPlaceholder: "பிரிவுக்குச் செல்ல…",
+  dashRadarHint: "நிகழ்வுகளில் உங்கள் போட்டி வடிவம் — முழுமையானது #1 க்கு அருகில்.",
+  dashMarksBreakdown: "அடையாளப் பிரிவு",
+  dashMarksBreakdownHint: "சமர்ப்பித்த அடையாளங்கள் எவ்வாறு முடிவு செய்யப்பட்டன.",
+  dashMarksShort: "அடையாளங்கள்",
 
   dirSearch: "பெயர் அல்லது SLA அடையாள எண் மூலம் தேடுங்கள்",
   dirAnyDistrict: "அனைத்து மாவட்டங்களும்",

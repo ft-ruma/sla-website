@@ -12,8 +12,8 @@ import { bestPerYear } from "@/lib/marks";
 import type { MemberRecord } from "@/lib/member-auth";
 import type { CoachHit, CoachView, Dashboard, EventRow, MarkRow, PrivacyKey } from "@/lib/member-dashboard";
 import {
-  CoachingTimeline, Columns, Donut, FieldHistogram, GROUP_COLORS, improvement, RankRing, ScoreRing, Sparkline,
-  SplitBar, standing, StrengthBars, topPercent, TrendChart,
+  CoachingTimeline, Columns, Donut, FieldHistogram, GROUP_COLORS, improvement, RadarChart, RankRing, ScoreRing,
+  Sparkline, SplitBar, standing, StrengthBars, topPercent, TrendChart,
 } from "./DashboardCharts";
 import { markValue } from "@/lib/marks";
 
@@ -99,7 +99,10 @@ function ageYears(dob: string | null | undefined) {
   return Math.max(0, Math.floor((Date.now() - born) / (365.25 * 86_400_000)));
 }
 
-type Kpi = { label: string; value: React.ReactNode; sub?: string; spark?: number[]; rising?: boolean };
+type Kpi = {
+  label: string; value: React.ReactNode; sub?: string; spark?: number[]; rising?: boolean;
+  delta?: string; tone?: "blue" | "green" | "orange" | "violet";
+};
 
 export function DashHub({ lang, t, r, d, email, children }: {
   lang: Lang; t: Dict; r: MemberRecord; d: Dashboard | undefined; email: string | null;
@@ -118,13 +121,27 @@ export function DashHub({ lang, t, r, d, email, children }: {
     [t.dashSumRequests, d.coach.requests.length === 0],
     [t.dashSumMarks, d.coach.marks.length === 0],
   ] : [[t.dashChkVerified, r.status === "verified"]];
-  const score = checks.length ? checks.filter(([, ok]) => ok).length / checks.length : 0;
+  const profileScore = checks.length ? checks.filter(([, ok]) => ok).length / checks.length : 0;
+  const ranked = d?.is_athlete ? d.events.filter((e) => e.place && e.field) : [];
+  const standScore = ranked.length
+    ? ranked.reduce((s, e) => s + standing(e.place!, e.field!), 0) / ranked.length
+    : 0;
+  // Blend completeness with competitive standing so OVR feels like performance, not a checklist.
+  const score = d?.is_athlete && ranked.length
+    ? Math.min(0.99, profileScore * 0.35 + standScore * 0.65)
+    : profileScore;
   const focus = d ? nextAction(t, r.status, d) : t.dashNextActionPending;
   const coach = d?.coaches.find((c) => c.state === "active" && c.primary) ?? d?.coaches.find((c) => c.state === "active");
   const best = d?.is_athlete ? bestEvent(d.events) : undefined;
   const withPb = d?.is_athlete ? d.events.filter((e) => e.pb) : [];
   const waiting = d?.is_athlete ? d.marks.filter((m) => m.status === "pending").length : 0;
   const age = ageYears(p?.date_of_birth);
+  const bestTrend = best && d ? bestPerYear(best.code, [
+    ...d.marks.filter((m) => m.event === best.code && m.status === "approved"),
+    { year: best.pb_year, mark: best.pb },
+  ]) : [];
+  const bestChange = best ? improvement(best.code, bestTrend, t) : null;
+  const verifiedShare = withPb.length ? withPb.filter((e) => e.verified).length / withPb.length : 0;
 
   const tiles: Kpi[] = [];
   if (d?.is_athlete) {
@@ -133,37 +150,45 @@ export function DashHub({ lang, t, r, d, email, children }: {
         label: t.dashKpiBestRank,
         value: best ? `#${best.place}` : "—",
         sub: best ? `${eventLabel(lang, best.code)} · ${fill(t.dashTopPct, { pct: String(topPercent(best.place!, best.field!)) })}` : t.dashKpiNone,
-        spark: best ? [0.4, 0.45, 0.5, standing(best.place!, best.field!)] : [0.2, 0.25, 0.22, 0.3],
+        spark: best ? [0.35, 0.42, 0.5, 0.55, standing(best.place!, best.field!)] : [0.2, 0.25, 0.22, 0.28, 0.3],
         rising: true,
+        delta: bestChange ? `${bestChange.better ? "+" : "−"}${bestChange.text.match(/\(([\d.]+)%\)/)?.[1] ?? "0"}%` : undefined,
+        tone: "blue",
       },
       {
         label: t.dashKpiVerified,
         value: `${withPb.filter((e) => e.verified).length}/${withPb.length || 0}`,
         sub: t.dashKpiPbCount,
-        spark: [0.3, 0.4, 0.55, withPb.length ? withPb.filter((e) => e.verified).length / withPb.length : 0.2],
-        rising: true,
+        spark: [0.25, 0.35, 0.45, 0.55, Math.max(0.15, verifiedShare)],
+        rising: verifiedShare >= 0.5,
+        delta: withPb.length ? `${Math.round(verifiedShare * 100)}%` : undefined,
+        tone: "green",
       },
       {
         label: t.dashKpiWaiting,
         value: waiting,
         sub: t.dashActivityTitle,
-        spark: [waiting + 2, waiting + 1, Math.max(0, waiting), waiting].map(Number),
+        spark: [waiting + 3, waiting + 2, waiting + 1, Math.max(0, waiting), waiting].map(Number),
         rising: waiting === 0,
+        delta: waiting === 0 ? "0" : `+${waiting}`,
+        tone: "orange",
       },
       {
         label: t.dashKpiEvents,
         value: d.events.length,
-        sub: coach?.name ?? t.dashKpiCoach,
-        spark: [1, 2, Math.max(1, d.events.length - 1), d.events.length],
+        sub: coach?.name ? `${t.dashKpiCoach}: ${coach.name}` : t.dashKpiCoach,
+        spark: [1, 1.5, 2, Math.max(1, d.events.length - 1), Math.max(1, d.events.length)],
         rising: true,
+        delta: d.events.length ? `+${d.events.length}` : undefined,
+        tone: "violet",
       },
     );
   } else if (d?.is_coach && d.coach) {
     tiles.push(
-      { label: t.dashSumRequests, value: d.coach.requests.length, spark: [2, 1, d.coach.requests.length, d.coach.requests.length], rising: d.coach.requests.length === 0 },
-      { label: t.dashSumMarks, value: d.coach.marks.length, spark: [3, 2, 1, d.coach.marks.length], rising: d.coach.marks.length === 0 },
-      { label: t.dashSumAthletes, value: d.coach.athletes.length, spark: [1, 2, 3, d.coach.athletes.length || 1], rising: true },
-      { label: t.dashKpiPast, value: d.coach.past?.length ?? d.coach.past_count, spark: [1, 1, 2, 2], rising: true },
+      { label: t.dashSumRequests, value: d.coach.requests.length, spark: [2, 1, d.coach.requests.length, d.coach.requests.length], rising: d.coach.requests.length === 0, tone: "orange" },
+      { label: t.dashSumMarks, value: d.coach.marks.length, spark: [3, 2, 1, d.coach.marks.length], rising: d.coach.marks.length === 0, tone: "blue" },
+      { label: t.dashSumAthletes, value: d.coach.athletes.length, spark: [1, 2, 3, d.coach.athletes.length || 1], rising: true, tone: "green" },
+      { label: t.dashKpiPast, value: d.coach.past?.length ?? d.coach.past_count, spark: [1, 1, 2, 2], rising: true, tone: "violet" },
     );
   }
 
@@ -217,8 +242,8 @@ export function DashHub({ lang, t, r, d, email, children }: {
           </div>
         </div>
         <nav className="hub-rail-nav">
-          {nav.map(([id, label, icon]) => (
-            <a key={id} href={`#${id}`} className="hub-rail-link">
+          {nav.map(([id, label, icon], i) => (
+            <a key={id} href={`#${id}`} className={`hub-rail-link${i === 0 ? " is-active" : ""}`}>
               {icon}<span>{label}</span>
             </a>
           ))}
@@ -244,17 +269,24 @@ export function DashHub({ lang, t, r, d, email, children }: {
       <div className="hub-main">
         <header id={`overview-${r.slaa_id}`} className="hub-welcome scroll-mt-28">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-              {fill(t.dashWelcomeBack, { name: firstName(r.display_name) })}
+            <h1 className="text-2xl font-bold tracking-tight sm:text-[2rem]">
+              {fill(t.dashWelcomeBack, { name: firstName(r.display_name) })}{" "}
+              <span aria-hidden>👋</span>
             </h1>
             <p className="mt-1 text-sm text-muted">{t.dashWelcomeSub}</p>
             {email && <p className="mt-1 text-xs text-muted">{fill(t.accountSignedInAs, { email })}</p>}
           </div>
+          {d?.is_athlete && (
+            <a href={`#perf-${r.slaa_id}`} className={`${LINK} hidden sm:inline-flex items-center gap-1`}>
+              {t.dashViewAnalytics} →
+            </a>
+          )}
         </header>
 
         <section className="hub-athlete dash-rise">
           <div className="hub-athlete-media" aria-hidden>
             <span className="hub-athlete-orb" />
+            <span className="hub-athlete-ring" />
             <span className="hub-athlete-avatar">{initials(r.display_name)}</span>
           </div>
           <div className="min-w-0 flex-1">
@@ -264,7 +296,7 @@ export function DashHub({ lang, t, r, d, email, children }: {
                 ? <Badge tone="gold"><BadgeCheck className="size-3.5" aria-hidden /> {t.accountVerifiedBadge}</Badge>
                 : <Badge tone="grey">{t.accountPendingBadge}</Badge>}
             </div>
-            <p className="mt-1 text-sm text-muted">
+            <p className="mt-1 text-sm font-medium text-brand/80">
               {roles || t.accountTitle}
               {p?.club_name ? ` · ${p.club_name}` : p?.academic_institution ? ` · ${p.academic_institution}` : ""}
             </p>
@@ -273,16 +305,29 @@ export function DashHub({ lang, t, r, d, email, children }: {
               <div><dt>{t.dashVitalAge}</dt><dd>{age ?? "—"}</dd></div>
               <div><dt>{t.dashVitalDistrict}</dt><dd>{p ? districtName(lang, p.district) : "—"}</dd></div>
               <div><dt>{t.dashVitalGender}</dt><dd>{p ? (p.gender === "F" ? t.genderF : t.genderM) : "—"}</dd></div>
-              <div><dt>{t.dashVitalClub}</dt><dd>{club}</dd></div>
+              <div><dt>{t.dashVitalClub}</dt><dd className="truncate" title={club}>{club}</dd></div>
             </dl>
           </div>
+          {d?.is_athlete && best && (
+            <div className="hub-athlete-highlight">
+              <p className="text-[0.65rem] font-bold tracking-[0.14em] text-white/65 uppercase">{t.dashKpiBestRank}</p>
+              <p className="mt-1 text-3xl font-black text-white">#{best.place}</p>
+              <p className="text-xs font-semibold text-white/80">{eventLabel(lang, best.code)}</p>
+              <p className="mt-1 text-[0.7rem] text-white/60">{fill(t.dashTopPct, { pct: String(topPercent(best.place!, best.field!)) })}</p>
+            </div>
+          )}
         </section>
 
         {tiles.length > 0 && (
           <dl className="hub-kpi">
             {tiles.map((k) => (
-              <div key={k.label} className="hub-kpi-card">
-                <dt>{k.label}</dt>
+              <div key={k.label} className={`hub-kpi-card tone-${k.tone ?? "blue"}`}>
+                <div className="flex items-start justify-between gap-2">
+                  <dt>{k.label}</dt>
+                  {k.delta && (
+                    <span className={`hub-delta ${k.rising === false ? "is-down" : "is-up"}`}>{k.delta}</span>
+                  )}
+                </div>
                 <dd className="hub-kpi-value">{k.value}</dd>
                 {k.sub && <dd className="text-xs text-muted">{k.sub}</dd>}
                 {k.spark && <Sparkline values={k.spark} rising={k.rising !== false} />}
@@ -299,11 +344,21 @@ export function DashHub({ lang, t, r, d, email, children }: {
       </div>
 
       <aside className="hub-side" aria-label={t.dashSeasonSummary}>
+        <div className="hub-search" role="search">
+          <Search className="size-4 shrink-0 text-muted" aria-hidden />
+          <p className="min-w-0 flex-1 truncate text-sm text-muted">{t.dashSearchPlaceholder}</p>
+          <div className="flex max-w-[55%] gap-1 overflow-x-auto">
+            {nav.slice(0, 3).map(([id, label]) => (
+              <a key={id} href={`#${id}`} className="hub-search-chip">{label}</a>
+            ))}
+          </div>
+        </div>
+
         <div className="hub-side-card">
           <h3 className="hub-side-title">{t.dashSeasonSummary}</h3>
           <div className="mt-4 flex items-center gap-4">
-            <ScoreRing value={score} label={`${t.dashProfileTitle}: ${Math.round(score * 100)}`} tone="light" size={108} />
-            <ul className="flex flex-1 flex-col gap-2 text-sm">
+            <ScoreRing value={score} label={`${t.dashProfileTitle}: ${Math.round(score * 100)}`} tone="light" size={118} />
+            <ul className="flex flex-1 flex-col gap-2.5 text-sm">
               {sideStats.map(([label, value]) => (
                 <li key={label} className="flex items-baseline justify-between gap-3">
                   <span className="text-muted">{label}</span>
@@ -378,70 +433,73 @@ function EventCard({ lang, t, e, marks, slaaId }: { lang: Lang; t: Dict; e: Even
   const rankText = ranked ? fill(t.dashChartRankTip, { event: name, place: String(e.place), field: String(e.field) }) : "";
 
   return (
-    <article className={`${PANEL} flex flex-col gap-5 dash-rise`}>
-      <div className="flex items-start justify-between gap-4">
+    <article className="event-card dash-rise">
+      <div className="event-card-head">
         <div className="min-w-0">
-          <p className="text-xs font-bold tracking-[0.16em] text-muted uppercase">{name}</p>
+          <p className="text-[0.68rem] font-bold tracking-[0.16em] text-white/70 uppercase">{name}</p>
           {e.pb ? (
             <>
-              <p className="mt-1 font-mono text-4xl font-black tracking-tight sm:text-5xl">{e.pb}</p>
-              <p className="mt-1.5 text-xs text-muted">{[e.pb_year, e.competition].filter(Boolean).join(" · ")}</p>
-              <div className="mt-2.5">
-                {e.verified
-                  ? <Badge tone="gold"><BadgeCheck className="size-3.5" aria-hidden /> {t.dashPbVerified}</Badge>
-                  : <Badge tone="grey"><Clock className="size-3.5" aria-hidden /> {t.dashPbUnverified}</Badge>}
-              </div>
+              <p className="mt-1 font-mono text-4xl font-black tracking-tight text-white sm:text-5xl">{e.pb}</p>
+              <p className="mt-1.5 text-xs text-white/65">{[e.pb_year, e.competition].filter(Boolean).join(" · ")}</p>
             </>
-          ) : <p className="mt-2 text-lg font-bold text-muted">{t.dashNoPb}</p>}
+          ) : <p className="mt-2 text-lg font-bold text-white/70">{t.dashNoPb}</p>}
         </div>
         {ranked ? (
-          <div className="flex flex-col items-center rounded-2xl bg-sand/80 px-3 py-2 text-center">
+          <div className="flex flex-col items-center rounded-2xl bg-white/15 px-3 py-2 text-center text-white backdrop-blur-sm">
             <RankRing place={e.place!} field={e.field!} label={rankText} />
-            <p className="mt-1 text-xs text-muted">{fill(t.dashFieldOf, { field: String(e.field) })}</p>
-            <p className="text-xs font-bold text-accent">{fill(t.dashTopPct, { pct: String(topPercent(e.place!, e.field!)) })}</p>
+            <p className="mt-1 text-xs text-white/70">{fill(t.dashFieldOf, { field: String(e.field) })}</p>
+            <p className="text-xs font-bold text-gold">{fill(t.dashTopPct, { pct: String(topPercent(e.place!, e.field!)) })}</p>
           </div>
         ) : (
-          <p className="max-w-28 text-right text-xs text-muted">{t.dashEmptyRank}</p>
+          <p className="max-w-28 text-right text-xs text-white/55">{t.dashEmptyRank}</p>
         )}
       </div>
 
-      {(e.pb && e.dist && e.place && e.dist.length >= 3 && markValue(e.pb) !== null) || points.length >= 2 ? (
-        <div className="rounded-2xl bg-sand/70 p-4">
-          <p className="mb-3 text-xs font-bold tracking-[0.12em] text-muted uppercase">{t.dashAnalysisTitle}</p>
-          {e.pb && e.dist && e.place && e.dist.length >= 3 && markValue(e.pb) !== null && (
-            <div className="mb-4 last:mb-0">
-              <p className="mb-2 text-xs font-semibold text-ink/70">{t.dashFieldTitle}</p>
-              <FieldHistogram code={e.code} dist={e.dist} mine={markValue(e.pb)!} place={e.place} t={t} />
-            </div>
+      <div className="flex flex-col gap-4 p-5">
+        <div className="flex flex-wrap items-center gap-2">
+          {e.pb && (e.verified
+            ? <Badge tone="gold"><BadgeCheck className="size-3.5" aria-hidden /> {t.dashPbVerified}</Badge>
+            : <Badge tone="grey"><Clock className="size-3.5" aria-hidden /> {t.dashPbUnverified}</Badge>)}
+          {change && (
+            <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold ${change.better ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-clay"}`}>
+              {change.better ? <TrendingUp className="size-3.5" aria-hidden /> : <TrendingDown className="size-3.5" aria-hidden />}
+              {change.text}
+            </span>
           )}
-          {points.length >= 2 ? (
-            <div>
-              <p className="mb-1 text-xs font-semibold text-ink/70">{t.dashProgressTitle}</p>
-              <TrendChart code={e.code} points={points} label={`${name}: ${points.map((p) => `${p.year} ${p.mark}`).join(", ")}`} />
-              {change && (
-                <p className={`mt-2 flex items-center gap-1.5 text-sm font-bold ${change.better ? "text-emerald-700" : "text-clay"}`}>
-                  {change.better ? <TrendingUp className="size-4" aria-hidden /> : <TrendingDown className="size-4" aria-hidden />}
-                  {change.text}
-                </p>
-              )}
-            </div>
-          ) : e.pb ? <p className="text-xs text-muted">{t.dashTrendEmpty}</p> : null}
         </div>
-      ) : null}
 
-      {waiting && (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-gold/30 px-3.5 py-2.5 text-sm">
-          <span className="flex items-center gap-1.5 font-semibold">
-            <Clock className="size-4" aria-hidden />
-            {fill(t.dashWaitingFor, { mark: waiting.mark, year: String(waiting.year) })}
-          </span>
-          <form action={act.withdrawMark}>
-            <Hidden lang={lang} slaaId={slaaId} />
-            <input type="hidden" name="markId" value={waiting.id} />
-            <button className="text-xs font-bold underline underline-offset-2 hover:text-accent">{t.dashWithdraw}</button>
-          </form>
-        </div>
-      )}
+        {(e.pb && e.dist && e.place && e.dist.length >= 3 && markValue(e.pb) !== null) || points.length >= 2 ? (
+          <div className="rounded-2xl bg-[#f3f5fb] p-4">
+            <p className="mb-3 text-xs font-bold tracking-[0.12em] text-muted uppercase">{t.dashAnalysisTitle}</p>
+            {e.pb && e.dist && e.place && e.dist.length >= 3 && markValue(e.pb) !== null && (
+              <div className="mb-4 last:mb-0">
+                <p className="mb-2 text-xs font-semibold text-ink/70">{t.dashFieldTitle}</p>
+                <FieldHistogram code={e.code} dist={e.dist} mine={markValue(e.pb)!} place={e.place} t={t} />
+              </div>
+            )}
+            {points.length >= 2 ? (
+              <div>
+                <p className="mb-1 text-xs font-semibold text-ink/70">{t.dashProgressTitle}</p>
+                <TrendChart code={e.code} points={points} label={`${name}: ${points.map((p) => `${p.year} ${p.mark}`).join(", ")}`} />
+              </div>
+            ) : e.pb ? <p className="text-xs text-muted">{t.dashTrendEmpty}</p> : null}
+          </div>
+        ) : null}
+
+        {waiting && (
+          <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-amber-50 px-3.5 py-2.5 text-sm ring-1 ring-amber-200">
+            <span className="flex items-center gap-1.5 font-semibold">
+              <Clock className="size-4 text-amber-600" aria-hidden />
+              {fill(t.dashWaitingFor, { mark: waiting.mark, year: String(waiting.year) })}
+            </span>
+            <form action={act.withdrawMark}>
+              <Hidden lang={lang} slaaId={slaaId} />
+              <input type="hidden" name="markId" value={waiting.id} />
+              <button className="text-xs font-bold text-brand underline underline-offset-2">{t.dashWithdraw}</button>
+            </form>
+          </div>
+        )}
+      </div>
     </article>
   );
 }
@@ -463,11 +521,25 @@ export function AthleteDashboard({ lang, t, d, status, coachQuery, hits }: {
   const eventCodes = [...new Set([...d.events.map((e) => e.code), ...EVENTS.map((e) => e.code)])];
   const year = new Date().getFullYear();
 
-  // Prefer the ranked event with the richest year history for the hero trend.
   const trendEvent = [...d.events]
     .map((e) => ({ e, points: bestPerYear(e.code, [...d.marks.filter((m) => m.event === e.code && m.status === "approved"), { year: e.pb_year, mark: e.pb }]) }))
     .sort((a, b) => b.points.length - a.points.length || (a.e.place && a.e.field && b.e.place && b.e.field ? a.e.place / a.e.field - b.e.place / b.e.field : 0))[0];
-  void status;
+  const trendChange = trendEvent ? improvement(trendEvent.e.code, trendEvent.points, t) : null;
+  const insights: string[] = [];
+  if (status !== "verified") insights.push(t.dashNextActionPending);
+  else if (!active.length) insights.push(t.dashNextActionCoach);
+  const waitingMarks = d.marks.filter((m) => m.status === "pending").length;
+  if (waitingMarks) insights.push(fill(t.dashInsightWaiting, { count: String(waitingMarks) }));
+  const best = bestEvent(d.events);
+  if (best) insights.push(fill(t.dashInsightBest, { event: eventLabel(lang, best.code), pct: String(topPercent(best.place!, best.field!)) }));
+  if (trendChange) insights.push(fill(t.dashInsightImprove, { event: eventLabel(lang, trendEvent!.e.code), delta: trendChange.text }));
+
+  const radarRows = strength.slice(0, 6).map((r) => ({ label: r.label.replace(/\s.*/, "").slice(0, 8), value: standing(r.place, r.field) }));
+  const markSlices = [
+    { label: t.dashStatus_approved, value: d.marks.filter((m) => m.status === "approved").length, color: "#16a34a" },
+    { label: t.dashStatus_pending, value: d.marks.filter((m) => m.status === "pending").length, color: "#f59e0b" },
+    { label: t.dashStatus_rejected, value: d.marks.filter((m) => m.status === "rejected").length, color: "#c1121f" },
+  ].filter((s) => s.value > 0);
 
   return (
     <>
@@ -475,39 +547,58 @@ export function AthleteDashboard({ lang, t, d, status, coachQuery, hits }: {
         <SectionHead id={`perf-${d.slaa_id}`} kicker={t.dashNavPerformance} title={t.dashEventsTitle}
           intro={t.dashEventsIntro} icon={<Trophy className="size-5" aria-hidden />} />
 
-        <div className="grid gap-5 xl:grid-cols-[1.45fr_1fr]">
-          <div className={`${PANEL} min-h-64`}>
-            <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+        {insights.length > 0 && (
+          <div className="hub-insight-strip">
+            {insights.slice(0, 3).map((tip) => (
+              <span key={tip} className="hub-insight-chip">{tip}</span>
+            ))}
+          </div>
+        )}
+
+        <div className="grid gap-5 xl:grid-cols-[1.55fr_1fr]">
+          <div className={`${PANEL} min-h-72`}>
+            <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h3 className="text-sm font-bold">{t.dashPerformanceTrend}</h3>
+                <h3 className="text-base font-bold">{t.dashPerformanceTrend}</h3>
                 <p className="text-xs text-muted">{t.dashTrendPick}</p>
               </div>
-              {trendEvent && <span className="text-xs font-bold text-brand">{eventLabel(lang, trendEvent.e.code)}</span>}
+              <div className="flex flex-col items-end gap-1">
+                {trendEvent && <span className="rounded-full bg-brand/10 px-2.5 py-1 text-xs font-bold text-brand">{eventLabel(lang, trendEvent.e.code)}</span>}
+                {trendChange && (
+                  <span className={`text-xs font-bold ${trendChange.better ? "text-emerald-600" : "text-clay"}`}>
+                    {trendChange.better ? "↑" : "↓"} {trendChange.text}
+                  </span>
+                )}
+              </div>
             </div>
             {trendEvent && trendEvent.points.length >= 2 ? (
               <TrendChart
+                tall
                 code={trendEvent.e.code}
                 points={trendEvent.points}
                 label={`${eventLabel(lang, trendEvent.e.code)}: ${trendEvent.points.map((p) => `${p.year} ${p.mark}`).join(", ")}`}
               />
-            ) : <p className="mt-8 text-sm text-muted">{t.dashNoTrendYet}</p>}
+            ) : <p className="mt-10 text-sm text-muted">{t.dashNoTrendYet}</p>}
           </div>
           <div className={PANEL}>
             <div className="mb-3 flex items-baseline justify-between gap-2">
-              <h3 className="text-sm font-bold">{t.dashActivityTitle}</h3>
+              <h3 className="text-base font-bold">{t.dashActivityTitle}</h3>
               <a href={`#send-${d.slaa_id}`} className={LINK}>{t.dashViewAll}</a>
             </div>
             {activity.length ? (
               <ol className="flex flex-col">
-                {activity.slice(0, 4).map((m) => (
-                  <li key={m.id} className="flex items-center gap-3 border-b border-line py-3 last:border-0">
-                    <span className={`size-2.5 shrink-0 rounded-full ${
-                      { pending: "bg-amber-400", approved: "bg-emerald-500", rejected: "bg-clay", withdrawn: "bg-black/25" }[m.status]}`} aria-hidden />
-                    <span className="min-w-0 flex-1 text-sm">
-                      <strong>{eventLabel(lang, m.event)}</strong>
-                      <span className="mt-0.5 block text-xs text-muted">{t[`dashStatus_${m.status}` as keyof Dict]} · {m.year}</span>
+                {activity.slice(0, 5).map((m) => (
+                  <li key={m.id} className="hub-match-row">
+                    <span className={`hub-match-dot ${
+                      { pending: "is-pending", approved: "is-win", rejected: "is-loss", withdrawn: "is-draw" }[m.status]}`} aria-hidden />
+                    <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#eef1f8] text-[0.65rem] font-black text-brand">
+                      {m.event.slice(0, 3)}
                     </span>
-                    <span className="font-mono text-sm font-bold tabular-nums">{m.mark}</span>
+                    <span className="min-w-0 flex-1 text-sm">
+                      <strong className="block truncate">{eventLabel(lang, m.event)}</strong>
+                      <span className="text-xs text-muted">{t[`dashStatus_${m.status}` as keyof Dict]} · {m.year}{m.competition ? ` · ${m.competition}` : ""}</span>
+                    </span>
+                    <span className="font-mono text-sm font-black tabular-nums">{m.mark}</span>
                   </li>
                 ))}
               </ol>
@@ -515,13 +606,27 @@ export function AthleteDashboard({ lang, t, d, status, coachQuery, hits }: {
           </div>
         </div>
 
-        {(strength.length > 0) && (
+        <div className="grid gap-5 lg:grid-cols-2">
           <div className={PANEL}>
-            <h3 className="text-sm font-bold">{t.dashStrengthTitle}</h3>
-            <p className="mt-1 mb-4 text-sm text-muted">{t.dashStrengthHint}</p>
-            <StrengthBars rows={strength} />
+            <h3 className="text-base font-bold">{t.dashStrengthTitle}</h3>
+            <p className="mt-1 mb-3 text-sm text-muted">{t.dashRadarHint}</p>
+            {radarRows.length >= 3 ? (
+              <RadarChart rows={radarRows} />
+            ) : strength.length ? (
+              <StrengthBars rows={strength} />
+            ) : <p className="text-sm text-muted">{t.dashNoPb}</p>}
+            {radarRows.length >= 3 && strength.length > 0 && (
+              <div className="mt-2"><StrengthBars rows={strength.slice(0, 4)} /></div>
+            )}
           </div>
-        )}
+          <div className={PANEL}>
+            <h3 className="text-base font-bold">{t.dashMarksBreakdown}</h3>
+            <p className="mt-1 mb-3 text-sm text-muted">{t.dashMarksBreakdownHint}</p>
+            {markSlices.length ? (
+              <Donut slices={markSlices} total={markSlices.reduce((n, s) => n + s.value, 0)} centerLabel={t.dashMarksShort} />
+            ) : <p className="text-sm text-muted">{t.dashActivityEmpty}</p>}
+          </div>
+        </div>
 
         {d.events.length ? (
           <div className="grid gap-5 md:grid-cols-2">

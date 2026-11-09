@@ -25,8 +25,10 @@ export function RankRing({ place, field, size = 76, label }: { place: number; fi
 }
 
 /** Marks over the years with "better" always drawn upwards, plus a soft area under the line. */
-export function TrendChart({ code, points, label }: { code: string; points: MarkPoint[]; label: string }) {
-  const W = 320, H = 110, L = 8, R = 56, T = 14, B = 22;
+export function TrendChart({ code, points, label, tall = false }: {
+  code: string; points: MarkPoint[]; label: string; tall?: boolean;
+}) {
+  const W = 420, H = tall ? 180 : 110, L = 12, R = 64, T = 18, B = 26;
   const years = points.map((p) => p.year), values = points.map((p) => p.value);
   const y0 = Math.min(...years), y1 = Math.max(...years);
   const v0 = Math.min(...values), v1 = Math.max(...values);
@@ -37,30 +39,82 @@ export function TrendChart({ code, points, label }: { code: string; points: Mark
   const base = H - B;
   const area = `${line} L${x(y1).toFixed(1)},${base} L${x(y0).toFixed(1)},${base} Z`;
   const last = points[points.length - 1];
-  const gid = `g-${code.replace(/\W/g, "")}`;
+  const gid = `g-${code.replace(/\W/g, "")}-${tall ? "t" : "s"}`;
+  const midY = [0.25, 0.5, 0.75].map((f) => T + f * (H - T - B));
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img" aria-label={label}>
       <defs>
         <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--color-brand)" stopOpacity={0.28} />
+          <stop offset="0%" stopColor="var(--color-brand)" stopOpacity={0.32} />
           <stop offset="100%" stopColor="var(--color-brand)" stopOpacity={0} />
         </linearGradient>
       </defs>
+      {midY.map((yy) => (
+        <line key={yy} x1={L} x2={W - R} y1={yy} y2={yy} stroke="var(--color-line)" strokeDasharray="3 5" />
+      ))}
       <line x1={L} x2={W - R} y1={base} y2={base} stroke="var(--color-line)" strokeWidth={1} />
       <path d={area} fill={`url(#${gid})`} />
-      <path d={line} fill="none" stroke="var(--color-brand)" strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
+      <path d={line} fill="none" stroke="var(--color-brand)" strokeWidth={3} strokeLinejoin="round" strokeLinecap="round" />
       {points.map((p) => (
         <g key={p.year}>
-          <circle cx={x(p.year)} cy={y(p.value)} r={11} fill="transparent">
+          <circle cx={x(p.year)} cy={y(p.value)} r={14} fill="transparent">
             <title>{`${p.year}: ${p.mark}`}</title>
           </circle>
-          <circle cx={x(p.year)} cy={y(p.value)} r={p === last ? 5.5 : 4} fill="var(--color-brand)" stroke="#fff" strokeWidth={2} pointerEvents="none" />
-          <text x={x(p.year)} y={H - 6} fontSize={10} fill="var(--color-muted)"
+          <circle cx={x(p.year)} cy={y(p.value)} r={p === last ? 6 : 4.5} fill="var(--color-brand)" stroke="#fff" strokeWidth={2.5} pointerEvents="none" />
+          <text x={x(p.year)} y={H - 6} fontSize={11} fill="var(--color-muted)"
             textAnchor={p.year === y0 ? "start" : p.year === y1 ? "end" : "middle"}>{p.year}</text>
         </g>
       ))}
-      <text x={x(last.year) + 10} y={y(last.value) + 4} fontSize={13} fontWeight={800} fill="var(--color-ink)"
-        fontFamily="var(--font-mono, monospace)">{last.mark}</text>
+      {tall && (
+        <g>
+          <rect x={Math.min(x(last.year) - 36, W - R - 78)} y={y(last.value) - 36} width={78} height={28} rx={8} fill="#111827" />
+          <text x={Math.min(x(last.year) - 36, W - R - 78) + 39} y={y(last.value) - 17} textAnchor="middle"
+            fontSize={11} fontWeight={800} fill="#fff" fontFamily="var(--font-mono, monospace)">{last.mark}</text>
+        </g>
+      )}
+      {!tall && (
+        <text x={x(last.year) + 10} y={y(last.value) + 4} fontSize={13} fontWeight={800} fill="var(--color-ink)"
+          fontFamily="var(--font-mono, monospace)">{last.mark}</text>
+      )}
+    </svg>
+  );
+}
+
+/** Radar of relative standings across events (full = #1). */
+export function RadarChart({ rows }: { rows: { label: string; value: number }[] }) {
+  const n = rows.length;
+  if (n < 3) return null;
+  const cx = 110, cy = 110, R = 78;
+  const ang = (i: number) => -Math.PI / 2 + (i / n) * Math.PI * 2;
+  const pt = (i: number, v: number) => {
+    const a = ang(i);
+    return [cx + Math.cos(a) * R * v, cy + Math.sin(a) * R * v] as const;
+  };
+  const poly = rows.map((r, i) => pt(i, Math.max(0.08, Math.min(1, r.value))).join(",")).join(" ");
+  const rings = [0.33, 0.66, 1];
+  return (
+    <svg viewBox="0 0 220 220" className="mx-auto h-auto w-full max-w-[240px]" role="img"
+      aria-label={rows.map((r) => `${r.label} ${Math.round(r.value * 100)}%`).join(", ")}>
+      {rings.map((v) => (
+        <polygon key={v}
+          points={rows.map((_, i) => pt(i, v).join(",")).join(" ")}
+          fill="none" stroke="rgba(6,7,248,0.12)" strokeWidth={1} />
+      ))}
+      {rows.map((_, i) => {
+        const [x, y] = pt(i, 1);
+        return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="rgba(6,7,248,0.12)" />;
+      })}
+      <polygon points={poly} fill="rgba(6,7,248,0.18)" stroke="var(--color-brand)" strokeWidth={2.5} />
+      {rows.map((r, i) => {
+        const [x, y] = pt(i, Math.max(0.08, Math.min(1, r.value)));
+        const [lx, ly] = pt(i, 1.18);
+        return (
+          <g key={r.label}>
+            <circle cx={x} cy={y} r={4} fill="var(--color-brand)" stroke="#fff" strokeWidth={2} />
+            <text x={lx} y={ly + 4} textAnchor="middle" fontSize={10} fontWeight={700} fill="var(--color-ink)">{r.label}</text>
+          </g>
+        );
+      })}
     </svg>
   );
 }
@@ -135,17 +189,20 @@ export function FieldHistogram({ code, dist, mine, place, t }: {
 // Athlete: strength profile across events, and profile strength ring
 // ---------------------------------------------------------------------
 
+const BAR_TONES = ["#0607f8", "#16a34a", "#e85d04", "#7c3aed", "#0891b2", "#db2777"];
+
 export function StrengthBars({ rows }: { rows: { label: string; place: number; field: number; top: string }[] }) {
   return (
-    <ul className="flex flex-col gap-3">
-      {rows.map((r) => (
+    <ul className="flex flex-col gap-3.5">
+      {rows.map((r, i) => (
         <li key={r.label} title={`${r.label}: #${r.place} / ${r.field}`}>
           <div className="flex items-baseline justify-between text-sm">
             <span className="font-semibold">{r.label}</span>
-            <span className="text-xs font-bold tabular-nums">{r.top}</span>
+            <span className="text-xs font-bold tabular-nums text-brand">{r.top} · #{r.place}</span>
           </div>
-          <div className="mt-1.5 h-3 bg-black/[0.07]">
-            <div className="h-full bg-gradient-to-r from-accent/70 to-accent" style={{ width: `${Math.max(4, standing(r.place, r.field) * 100)}%` }} />
+          <div className="mt-1.5 h-3.5 overflow-hidden rounded-full bg-black/[0.06]">
+            <div className="h-full rounded-full transition-[width]"
+              style={{ width: `${Math.max(6, standing(r.place, r.field) * 100)}%`, background: BAR_TONES[i % BAR_TONES.length] }} />
           </div>
         </li>
       ))}
@@ -177,17 +234,27 @@ export function ScoreRing({ value, label, size = 112, tone = "dark" }: {
 /** Tiny KPI sparkline — values rise visually; used only for shape, not scale. */
 export function Sparkline({ values, rising = true }: { values: number[]; rising?: boolean }) {
   if (values.length < 2) return null;
-  const W = 88, H = 28, P = 2;
+  const W = 120, H = 34, P = 2;
   const lo = Math.min(...values), hi = Math.max(...values), span = hi - lo || 1;
-  const pts = values.map((v, i) => {
+  const coords = values.map((v, i) => {
     const x = P + (i / (values.length - 1)) * (W - P * 2);
     const y = P + (1 - (v - lo) / span) * (H - P * 2);
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
+    return [x, y] as const;
   });
-  const color = rising ? "#16a34a" : "var(--color-clay)";
+  const line = coords.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+  const area = `M${coords[0][0].toFixed(1)},${(H - P).toFixed(1)} L${line.replace(/ /g, " L")} L${coords[coords.length - 1][0].toFixed(1)},${(H - P).toFixed(1)} Z`;
+  const color = rising ? "#16a34a" : "#c1121f";
+  const gid = `sp-${rising ? "up" : "dn"}-${values.length}-${Math.round(values[0] * 100)}`;
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="mt-3 h-7 w-full" aria-hidden>
-      <polyline fill="none" stroke={color} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" points={pts.join(" ")} />
+    <svg viewBox={`0 0 ${W} ${H}`} className="mt-3 h-8 w-full" aria-hidden>
+      <defs>
+        <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity={0.28} />
+          <stop offset="100%" stopColor={color} stopOpacity={0} />
+        </linearGradient>
+      </defs>
+      <path d={area} fill={`url(#${gid})`} />
+      <polyline fill="none" stroke={color} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" points={line} />
     </svg>
   );
 }

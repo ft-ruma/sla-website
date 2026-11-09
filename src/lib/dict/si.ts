@@ -458,6 +458,12 @@ export const si: Dict = {
   dashKpiPbCount: "පුද්ගලික වාර්තා",
   dashFocusCta: "ක්‍රියා කරන්න",
   dashNoTrendYet: "ප්‍රවණතා ප්‍රස්ථාරය සඳහා වසර දෙකකින් ලකුණු අනුමත කරන්න.",
+  dashViewAnalytics: "විස්තරාත්මක විශ්ලේෂණ බලන්න",
+  dashSearchPlaceholder: "කොටසකට යන්න…",
+  dashRadarHint: "ඉසව් අතර ඔබේ තරගකාරී හැඩය — පුර්ණ වන තරමට #1 ට සමීපයි.",
+  dashMarksBreakdown: "ලකුණු බෙදාහැරීම",
+  dashMarksBreakdownHint: "ඔබ යැවූ ලකුණු තීරණය වී ඇති ආකාරය.",
+  dashMarksShort: "ලකුණු",
 
   dirSearch: "නමින් හෝ SLA හැඳුනුම් අංකයෙන් සොයන්න",
   dirAnyDistrict: "සියලු දිස්ත්‍රික්ක",
