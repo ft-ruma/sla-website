@@ -42,19 +42,19 @@ export function TrendChart({ code, points, label }: { code: string; points: Mark
     <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img" aria-label={label}>
       <defs>
         <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--color-accent)" stopOpacity={0.22} />
-          <stop offset="100%" stopColor="var(--color-accent)" stopOpacity={0} />
+          <stop offset="0%" stopColor="var(--color-brand)" stopOpacity={0.28} />
+          <stop offset="100%" stopColor="var(--color-brand)" stopOpacity={0} />
         </linearGradient>
       </defs>
       <line x1={L} x2={W - R} y1={base} y2={base} stroke="var(--color-line)" strokeWidth={1} />
       <path d={area} fill={`url(#${gid})`} />
-      <path d={line} fill="none" stroke="var(--color-accent)" strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
+      <path d={line} fill="none" stroke="var(--color-brand)" strokeWidth={2.5} strokeLinejoin="round" strokeLinecap="round" />
       {points.map((p) => (
         <g key={p.year}>
           <circle cx={x(p.year)} cy={y(p.value)} r={11} fill="transparent">
             <title>{`${p.year}: ${p.mark}`}</title>
           </circle>
-          <circle cx={x(p.year)} cy={y(p.value)} r={p === last ? 5.5 : 4} fill="var(--color-accent)" stroke="#fff" strokeWidth={2} pointerEvents="none" />
+          <circle cx={x(p.year)} cy={y(p.value)} r={p === last ? 5.5 : 4} fill="var(--color-brand)" stroke="#fff" strokeWidth={2} pointerEvents="none" />
           <text x={x(p.year)} y={H - 6} fontSize={10} fill="var(--color-muted)"
             textAnchor={p.year === y0 ? "start" : p.year === y1 ? "end" : "middle"}>{p.year}</text>
         </g>
@@ -153,15 +153,41 @@ export function StrengthBars({ rows }: { rows: { label: string; place: number; f
   );
 }
 
-export function ScoreRing({ value, label, size = 112 }: { value: number; label: string; size?: number }) {
+export function ScoreRing({ value, label, size = 112, tone = "dark" }: {
+  value: number; label: string; size?: number; tone?: "dark" | "light";
+}) {
   const r = 44, c = 2 * Math.PI * r;
+  const light = tone === "light";
   return (
     <svg viewBox="0 0 112 112" width={size} height={size} role="img" aria-label={label} className="shrink-0">
       <title>{label}</title>
-      <circle cx={56} cy={56} r={r} fill="none" stroke="rgba(255,255,255,0.14)" strokeWidth={10} />
-      <circle cx={56} cy={56} r={r} fill="none" stroke="var(--color-gold)" strokeWidth={10} strokeLinecap="butt"
+      <circle cx={56} cy={56} r={r} fill="none" stroke={light ? "rgba(6,7,248,0.12)" : "rgba(255,255,255,0.14)"} strokeWidth={10} />
+      <circle cx={56} cy={56} r={r} fill="none" stroke={light ? "var(--color-brand)" : "var(--color-gold)"} strokeWidth={10} strokeLinecap="butt"
         strokeDasharray={`${value * c} ${c}`} transform="rotate(-90 56 56)" />
-      <text x={56} y={62} textAnchor="middle" fontSize={24} fontWeight={900} fill="#fff">{Math.round(value * 100)}%</text>
+      <text x={56} y={54} textAnchor="middle" fontSize={24} fontWeight={900} fill={light ? "var(--color-ink)" : "#fff"}>
+        {Math.round(value * 100)}
+      </text>
+      <text x={56} y={72} textAnchor="middle" fontSize={11} fontWeight={700} fill={light ? "var(--color-muted)" : "rgba(255,255,255,0.7)"}>
+        {light ? "OVR" : "%"}
+      </text>
+    </svg>
+  );
+}
+
+/** Tiny KPI sparkline — values rise visually; used only for shape, not scale. */
+export function Sparkline({ values, rising = true }: { values: number[]; rising?: boolean }) {
+  if (values.length < 2) return null;
+  const W = 88, H = 28, P = 2;
+  const lo = Math.min(...values), hi = Math.max(...values), span = hi - lo || 1;
+  const pts = values.map((v, i) => {
+    const x = P + (i / (values.length - 1)) * (W - P * 2);
+    const y = P + (1 - (v - lo) / span) * (H - P * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  const color = rising ? "#16a34a" : "var(--color-clay)";
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="mt-3 h-7 w-full" aria-hidden>
+      <polyline fill="none" stroke={color} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" points={pts.join(" ")} />
     </svg>
   );
 }

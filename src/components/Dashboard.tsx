@@ -1,6 +1,6 @@
 import {
-  BadgeCheck, Check, CircleCheck, Clock, EyeOff, Search, Send, TrendingDown, TrendingUp, Trophy, UserCheck,
-  Users, X,
+  BadgeCheck, CalendarDays, Check, CircleCheck, Clock, EyeOff, LayoutDashboard, MapPin, Search, Send,
+  TrendingDown, TrendingUp, Trophy, UserCheck, Users, X,
 } from "lucide-react";
 import { Badge, Notice } from "@/components/bits";
 import * as act from "@/lib/dashboard-actions";
@@ -12,23 +12,22 @@ import { bestPerYear } from "@/lib/marks";
 import type { MemberRecord } from "@/lib/member-auth";
 import type { CoachHit, CoachView, Dashboard, EventRow, MarkRow, PrivacyKey } from "@/lib/member-dashboard";
 import {
-  CoachingTimeline, Columns, Donut, FieldHistogram, GROUP_COLORS, improvement, RankRing, ScoreRing, SplitBar, standing, StrengthBars,
-  topPercent, TrendChart,
+  CoachingTimeline, Columns, Donut, FieldHistogram, GROUP_COLORS, improvement, RankRing, ScoreRing, Sparkline,
+  SplitBar, standing, StrengthBars, topPercent, TrendChart,
 } from "./DashboardCharts";
 import { markValue } from "@/lib/marks";
-import { Container } from "./PageHero";
 
-// The member dashboard: a dark header with the numbers that matter, then
-// performance, coach, squad and privacy sections. Server-rendered; the forms
-// post to the actions in lib/dashboard-actions.ts.
+// Performance Hub: left rail, centre analytics, right insights. Server-rendered;
+// forms post to lib/dashboard-actions.ts.
 
 const INPUT = "dash-input";
 const BUTTON = "dash-btn";
 const SMALL = "inline-flex h-9 items-center justify-center gap-1.5 rounded-full px-3 text-xs font-bold";
 const GHOST = "dash-btn-ghost";
 const DARK = "dash-btn";
-const KICKER = "text-xs font-bold tracking-[0.18em] text-accent uppercase";
+const KICKER = "text-xs font-bold tracking-[0.16em] text-brand uppercase";
 const PANEL = "dash-panel p-5 sm:p-6";
+const LINK = "text-sm font-bold text-brand hover:underline underline-offset-2";
 
 const EXTRA_EVENTS: Record<string, string> = {
   "3000m": "3000m", RW: "Race walk", HM: "Half marathon", XC: "Cross country", "4x400mX": "4×400m mixed relay",
@@ -86,131 +85,281 @@ function bestEvent(events: EventRow[]) {
 }
 
 // ---------------------------------------------------------------------
-// Header band: who, status, and the headline numbers
+// Performance Hub shell: rail · main · insights
 // ---------------------------------------------------------------------
 
-export function RecordHero({ lang, t, r, d, email }: {
+function firstName(name: string) {
+  return name.replace(/[^\p{L}\s]/gu, " ").trim().split(/\s+/)[0] || name;
+}
+
+function ageYears(dob: string | null | undefined) {
+  if (!dob) return null;
+  const born = Date.parse(dob);
+  if (!Number.isFinite(born)) return null;
+  return Math.max(0, Math.floor((Date.now() - born) / (365.25 * 86_400_000)));
+}
+
+type Kpi = { label: string; value: React.ReactNode; sub?: string; spark?: number[]; rising?: boolean };
+
+export function DashHub({ lang, t, r, d, email, children }: {
   lang: Lang; t: Dict; r: MemberRecord; d: Dashboard | undefined; email: string | null;
+  children: React.ReactNode;
 }) {
-  const tiles: { label: string; value: React.ReactNode; sub?: string }[] = [];
-  if (d?.is_athlete) {
-    const best = bestEvent(d.events);
-    const withPb = d.events.filter((e) => e.pb);
-    const coach = d.coaches.find((c) => c.state === "active" && c.primary) ?? d.coaches.find((c) => c.state === "active");
-    tiles.push(
-      best
-        ? { label: t.dashKpiBestRank, value: `#${best.place}`, sub: `${eventLabel(lang, best.code)} · ${fill(t.dashTopPct, { pct: String(topPercent(best.place!, best.field!)) })}` }
-        : { label: t.dashKpiBestRank, value: "—", sub: t.dashKpiNone },
-      { label: t.dashKpiVerified, value: `${withPb.filter((e) => e.verified).length}/${withPb.length}` },
-      { label: t.dashKpiWaiting, value: d.marks.filter((m) => m.status === "pending").length },
-      { label: t.dashKpiCoach, value: <span className="text-xl leading-tight">{coach?.name ?? t.dashKpiNone}</span> },
-    );
-  }
-  if (d?.is_coach && d.coach) {
-    tiles.push(
-      { label: t.dashSumRequests, value: d.coach.requests.length },
-      { label: t.dashSumMarks, value: d.coach.marks.length },
-      { label: t.dashSumAthletes, value: d.coach.athletes.length },
-      { label: t.dashKpiPast, value: d.coach.past?.length ?? d.coach.past_count },
-    );
-  }
+  const p = r.details;
   const checks: [string, boolean][] = d?.is_athlete ? [
     [t.dashChkVerified, r.status === "verified"],
     [t.dashChkCoach, d.coaches.some((c) => c.state === "active")],
     [t.dashChkEvents, d.events.length > 0],
     [t.dashChkPb, d.events.some((e) => e.pb)],
     [t.dashChkPbVerified, d.events.some((e) => e.pb) && d.events.every((e) => !e.pb || e.verified)],
-  ] : [];
+  ] : d?.is_coach && d.coach ? [
+    [t.dashChkVerified, r.status === "verified"],
+    [t.dashSumAthletes, d.coach.athletes.length > 0],
+    [t.dashSumRequests, d.coach.requests.length === 0],
+    [t.dashSumMarks, d.coach.marks.length === 0],
+  ] : [[t.dashChkVerified, r.status === "verified"]];
   const score = checks.length ? checks.filter(([, ok]) => ok).length / checks.length : 0;
-  const nav: [string, string][] = [];
-  if (d?.is_athlete) nav.push([`perf-${r.slaa_id}`, t.dashNavPerformance], [`coach-${r.slaa_id}`, t.dashNavCoach]);
-  if (d?.is_coach) nav.push([`squad-${r.slaa_id}`, t.dashNavSquad]);
-  if (d) nav.push([`privacy-${r.slaa_id}`, t.dashNavPrivacy]);
-  nav.push([`details-${r.slaa_id}`, t.dashNavDetails]);
+  const focus = d ? nextAction(t, r.status, d) : t.dashNextActionPending;
+  const coach = d?.coaches.find((c) => c.state === "active" && c.primary) ?? d?.coaches.find((c) => c.state === "active");
+  const best = d?.is_athlete ? bestEvent(d.events) : undefined;
+  const withPb = d?.is_athlete ? d.events.filter((e) => e.pb) : [];
+  const waiting = d?.is_athlete ? d.marks.filter((m) => m.status === "pending").length : 0;
+  const age = ageYears(p?.date_of_birth);
 
-  const insights: string[] = [];
+  const tiles: Kpi[] = [];
   if (d?.is_athlete) {
-    const waiting = d.marks.filter((m) => m.status === "pending").length;
-    if (waiting) insights.push(fill(t.dashInsightWaiting, { count: String(waiting) }));
-    const best = bestEvent(d.events);
-    if (best) insights.push(fill(t.dashInsightBest, { event: eventLabel(lang, best.code), pct: String(topPercent(best.place!, best.field!)) }));
+    tiles.push(
+      {
+        label: t.dashKpiBestRank,
+        value: best ? `#${best.place}` : "—",
+        sub: best ? `${eventLabel(lang, best.code)} · ${fill(t.dashTopPct, { pct: String(topPercent(best.place!, best.field!)) })}` : t.dashKpiNone,
+        spark: best ? [0.4, 0.45, 0.5, standing(best.place!, best.field!)] : [0.2, 0.25, 0.22, 0.3],
+        rising: true,
+      },
+      {
+        label: t.dashKpiVerified,
+        value: `${withPb.filter((e) => e.verified).length}/${withPb.length || 0}`,
+        sub: t.dashKpiPbCount,
+        spark: [0.3, 0.4, 0.55, withPb.length ? withPb.filter((e) => e.verified).length / withPb.length : 0.2],
+        rising: true,
+      },
+      {
+        label: t.dashKpiWaiting,
+        value: waiting,
+        sub: t.dashActivityTitle,
+        spark: [waiting + 2, waiting + 1, Math.max(0, waiting), waiting].map(Number),
+        rising: waiting === 0,
+      },
+      {
+        label: t.dashKpiEvents,
+        value: d.events.length,
+        sub: coach?.name ?? t.dashKpiCoach,
+        spark: [1, 2, Math.max(1, d.events.length - 1), d.events.length],
+        rising: true,
+      },
+    );
+  } else if (d?.is_coach && d.coach) {
+    tiles.push(
+      { label: t.dashSumRequests, value: d.coach.requests.length, spark: [2, 1, d.coach.requests.length, d.coach.requests.length], rising: d.coach.requests.length === 0 },
+      { label: t.dashSumMarks, value: d.coach.marks.length, spark: [3, 2, 1, d.coach.marks.length], rising: d.coach.marks.length === 0 },
+      { label: t.dashSumAthletes, value: d.coach.athletes.length, spark: [1, 2, 3, d.coach.athletes.length || 1], rising: true },
+      { label: t.dashKpiPast, value: d.coach.past?.length ?? d.coach.past_count, spark: [1, 1, 2, 2], rising: true },
+    );
   }
 
+  const nav: [string, string, React.ReactNode][] = [
+    [`overview-${r.slaa_id}`, t.dashNavOverview, <LayoutDashboard className="size-4" aria-hidden />],
+  ];
+  if (d?.is_athlete) {
+    nav.push([`perf-${r.slaa_id}`, t.dashNavPerformance, <Trophy className="size-4" aria-hidden />]);
+    nav.push([`coach-${r.slaa_id}`, t.dashNavCoach, <UserCheck className="size-4" aria-hidden />]);
+  }
+  if (d?.is_coach) nav.push([`squad-${r.slaa_id}`, t.dashNavSquad, <Users className="size-4" aria-hidden />]);
+  if (d) nav.push([`privacy-${r.slaa_id}`, t.dashNavPrivacy, <EyeOff className="size-4" aria-hidden />]);
+  nav.push([`details-${r.slaa_id}`, t.dashNavDetails, <BadgeCheck className="size-4" aria-hidden />]);
+
+  const roles = [d?.is_athlete && t.roleAthlete, d?.is_coach && t.roleCoach].filter(Boolean).join(" · ");
+  const club = p?.club_name || p?.academic_institution || "—";
+  const sideStats: [string, string][] = [];
+  if (d?.is_athlete) {
+    sideStats.push(
+      [t.dashKpiBestRank, best ? `#${best.place}` : "—"],
+      [t.dashKpiVerified, `${withPb.filter((e) => e.verified).length}/${withPb.length || 0}`],
+      [t.dashKpiWaiting, String(waiting)],
+      [t.dashKpiEvents, String(d.events.length)],
+      [t.dashKpiCoach, coach?.name ?? t.dashKpiNone],
+    );
+  } else if (d?.is_coach && d.coach) {
+    sideStats.push(
+      [t.dashSumAthletes, String(d.coach.athletes.length)],
+      [t.dashSumRequests, String(d.coach.requests.length)],
+      [t.dashSumMarks, String(d.coach.marks.length)],
+      [t.dashKpiPast, String(d.coach.past?.length ?? d.coach.past_count)],
+    );
+  }
+
+  const infoRows: [React.ReactNode, string, string][] = [
+    [<BadgeCheck className="size-4" aria-hidden />, t.dashVitalId, r.slaa_id],
+    [<CalendarDays className="size-4" aria-hidden />, t.dateOfBirth, p ? formatDate(lang, p.date_of_birth) : "—"],
+    [<Users className="size-4" aria-hidden />, t.dashVitalGender, p ? (p.gender === "F" ? t.genderF : t.genderM) : "—"],
+    [<MapPin className="size-4" aria-hidden />, t.dashVitalDistrict, p ? districtName(lang, p.district) : "—"],
+    [<Trophy className="size-4" aria-hidden />, t.dashVitalClub, club],
+  ];
+
   return (
-    <section className="relative overflow-hidden bg-night text-white">
-      <div aria-hidden className="pointer-events-none absolute -top-24 -right-16 size-72 rounded-full bg-accent/25 blur-3xl" />
-      <div aria-hidden className="pointer-events-none absolute -bottom-28 left-10 size-64 rounded-full bg-brand/20 blur-3xl" />
-      <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/2 opacity-[0.05] md:block"
-        style={{ backgroundImage: "repeating-linear-gradient(115deg, #fff 0 2px, transparent 2px 46px)" }} />
-      <Container className="relative flex flex-col gap-7 py-10 sm:py-12">
-        <div className="flex flex-col justify-between gap-8 lg:flex-row lg:items-center">
-          <div className="flex items-center gap-4 sm:gap-5">
-            <span className="flex size-16 shrink-0 items-center justify-center rounded-[1.35rem] bg-gradient-to-br from-accent to-[#c44a00] text-xl font-black shadow-lg shadow-accent/30 sm:size-[4.5rem] sm:text-2xl">
-              {initials(r.display_name)}
-            </span>
-            <div className="min-w-0">
-              <p className={KICKER}>{t.accountTitle}</p>
-              <h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-5xl">{r.display_name}</h1>
-              <p className="mt-2.5 flex flex-wrap items-center gap-2 text-sm">
-                <span className="rounded-full bg-white/10 px-2.5 py-1 font-mono text-xs font-bold tracking-wider text-gold">{r.slaa_id}</span>
-                {r.status === "verified"
-                  ? <Badge tone="gold"><BadgeCheck className="size-3.5" aria-hidden /> {t.accountVerifiedBadge}</Badge>
-                  : <span className="rounded-full border border-white/30 px-2.5 py-1 text-xs font-bold tracking-wider uppercase">{t.accountPendingBadge}</span>}
-                {d?.is_athlete && <Badge tone="blue">{t.roleAthlete}</Badge>}
-                {d?.is_coach && <Badge tone="blue">{t.roleCoach}</Badge>}
-              </p>
-              {email && <p className="mt-2 text-xs text-white/60">{fill(t.accountSignedInAs, { email })}</p>}
-            </div>
+    <div id={`r-${r.slaa_id}`} className="hub scroll-mt-20">
+      <aside className="hub-rail" aria-label={t.dashJumpTo}>
+        <div className="hub-brand">
+          <span className="hub-brand-mark" aria-hidden>SLA</span>
+          <div>
+            <p className="text-[0.65rem] font-bold tracking-[0.16em] text-brand uppercase">{t.dashHubBrand}</p>
+            <p className="text-sm font-bold text-ink">{t.accountTitle}</p>
           </div>
-          {checks.length > 0 && (
-            <div className="flex items-center gap-5 rounded-[1.35rem] border border-white/12 bg-white/[0.05] p-4 backdrop-blur-sm">
-              <ScoreRing value={score} label={`${t.dashProfileTitle}: ${Math.round(score * 100)}%`} />
-              <div>
-                <p className="text-xs font-bold tracking-[0.14em] text-white/55 uppercase">{t.dashProfileTitle}</p>
-                <ul className="mt-2 flex flex-col gap-1.5 text-xs">
-                  {checks.map(([label, ok]) => (
-                    <li key={label} className={`flex items-center gap-1.5 ${ok ? "text-white" : "text-white/40"}`}>
-                      {ok ? <Check className="size-3.5 text-gold" aria-hidden /> : <span className="inline-block size-3.5 rounded-sm border border-white/35" aria-hidden />}
-                      {label}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
+        </div>
+        <nav className="hub-rail-nav">
+          {nav.map(([id, label, icon]) => (
+            <a key={id} href={`#${id}`} className="hub-rail-link">
+              {icon}<span>{label}</span>
+            </a>
+          ))}
+        </nav>
+        <div className="hub-rail-cta">
+          <p className="text-xs font-bold tracking-[0.14em] text-white/70 uppercase">{t.dashFocusCta}</p>
+          <p className="mt-2 text-sm font-semibold leading-snug text-white">{focus}</p>
+          {d?.is_athlete && (
+            <a href={`#send-${d.slaa_id}`} className="mt-4 inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-2 text-xs font-bold text-brand">
+              <Send className="size-3.5" aria-hidden /> {t.dashSendMarkOpen}
+            </a>
           )}
         </div>
-
-        {insights.length > 0 && (
-          <div className="dash-insight">
-            {insights.map((tip) => (
-              <span key={tip} className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/90">{tip}</span>
-            ))}
+        <div className="hub-rail-user">
+          <span className="flex size-10 items-center justify-center rounded-xl bg-brand/10 text-xs font-black text-brand">{initials(r.display_name)}</span>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-bold">{r.display_name}</p>
+            <p className="truncate font-mono text-[0.68rem] text-muted">{r.slaa_id}</p>
           </div>
-        )}
+        </div>
+      </aside>
+
+      <div className="hub-main">
+        <header id={`overview-${r.slaa_id}`} className="hub-welcome scroll-mt-28">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+              {fill(t.dashWelcomeBack, { name: firstName(r.display_name) })}
+            </h1>
+            <p className="mt-1 text-sm text-muted">{t.dashWelcomeSub}</p>
+            {email && <p className="mt-1 text-xs text-muted">{fill(t.accountSignedInAs, { email })}</p>}
+          </div>
+        </header>
+
+        <section className="hub-athlete dash-rise">
+          <div className="hub-athlete-media" aria-hidden>
+            <span className="hub-athlete-orb" />
+            <span className="hub-athlete-avatar">{initials(r.display_name)}</span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-xl font-bold tracking-tight sm:text-2xl">{r.display_name}</h2>
+              {r.status === "verified"
+                ? <Badge tone="gold"><BadgeCheck className="size-3.5" aria-hidden /> {t.accountVerifiedBadge}</Badge>
+                : <Badge tone="grey">{t.accountPendingBadge}</Badge>}
+            </div>
+            <p className="mt-1 text-sm text-muted">
+              {roles || t.accountTitle}
+              {p?.club_name ? ` · ${p.club_name}` : p?.academic_institution ? ` · ${p.academic_institution}` : ""}
+            </p>
+            <dl className="hub-vitals">
+              <div><dt>{t.dashVitalId}</dt><dd className="font-mono">{r.slaa_id}</dd></div>
+              <div><dt>{t.dashVitalAge}</dt><dd>{age ?? "—"}</dd></div>
+              <div><dt>{t.dashVitalDistrict}</dt><dd>{p ? districtName(lang, p.district) : "—"}</dd></div>
+              <div><dt>{t.dashVitalGender}</dt><dd>{p ? (p.gender === "F" ? t.genderF : t.genderM) : "—"}</dd></div>
+              <div><dt>{t.dashVitalClub}</dt><dd>{club}</dd></div>
+            </dl>
+          </div>
+        </section>
 
         {tiles.length > 0 && (
-          <dl className="dash-kpi">
+          <dl className="hub-kpi">
             {tiles.map((k) => (
-              <div key={k.label}>
-                <dt className="text-[0.68rem] font-bold tracking-[0.14em] text-white/55 uppercase">{k.label}</dt>
-                <dd className="mt-2 text-3xl font-black tracking-tight tabular-nums sm:text-4xl">{k.value}</dd>
-                {k.sub && <dd className="mt-1 text-xs text-white/60">{k.sub}</dd>}
+              <div key={k.label} className="hub-kpi-card">
+                <dt>{k.label}</dt>
+                <dd className="hub-kpi-value">{k.value}</dd>
+                {k.sub && <dd className="text-xs text-muted">{k.sub}</dd>}
+                {k.spark && <Sparkline values={k.spark} rising={k.rising !== false} />}
               </div>
             ))}
           </dl>
         )}
 
-        <div>
-          <p className="mb-2 text-[0.68rem] font-bold tracking-[0.14em] text-white/45 uppercase">{t.dashJumpTo}</p>
-          <nav aria-label={r.display_name} className="dash-nav">
-            {nav.map(([id, label]) => (
-              <a key={id} href={`#${id}`}>{label}</a>
+        <nav className="hub-mobile-nav" aria-label={t.dashJumpTo}>
+          {nav.map(([id, label]) => <a key={id} href={`#${id}`}>{label}</a>)}
+        </nav>
+
+        <div className="flex flex-col gap-8 sm:gap-10">{children}</div>
+      </div>
+
+      <aside className="hub-side" aria-label={t.dashSeasonSummary}>
+        <div className="hub-side-card">
+          <h3 className="hub-side-title">{t.dashSeasonSummary}</h3>
+          <div className="mt-4 flex items-center gap-4">
+            <ScoreRing value={score} label={`${t.dashProfileTitle}: ${Math.round(score * 100)}`} tone="light" size={108} />
+            <ul className="flex flex-1 flex-col gap-2 text-sm">
+              {sideStats.map(([label, value]) => (
+                <li key={label} className="flex items-baseline justify-between gap-3">
+                  <span className="text-muted">{label}</span>
+                  <strong className="tabular-nums">{value}</strong>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <ul className="mt-4 flex flex-col gap-1.5 border-t border-line pt-4 text-xs">
+            {checks.map(([label, ok]) => (
+              <li key={label} className={`flex items-center gap-1.5 ${ok ? "text-ink" : "text-muted"}`}>
+                {ok ? <Check className="size-3.5 text-emerald-600" aria-hidden /> : <span className="size-3.5 rounded-sm border border-line" aria-hidden />}
+                {label}
+              </li>
             ))}
-          </nav>
+          </ul>
         </div>
-      </Container>
-    </section>
+
+        <div className="hub-side-card">
+          <h3 className="hub-side-title">{t.dashPlayerInfo}</h3>
+          <ul className="mt-3 flex flex-col gap-3">
+            {infoRows.map(([, label, value], i) => (
+              <li key={label} className="flex items-start gap-3 text-sm">
+                <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-brand/10 text-brand">{infoRows[i][0]}</span>
+                <span>
+                  <span className="block text-xs text-muted">{label}</span>
+                  <strong className="font-semibold break-words">{value}</strong>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="hub-side-action">
+          <p className="text-xs font-bold tracking-[0.14em] text-white/70 uppercase">{t.dashNextAction}</p>
+          <p className="mt-2 text-base font-bold leading-snug text-white">{focus}</p>
+          {d?.is_athlete ? (
+            <a href={`#send-${d.slaa_id}`} className="mt-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-bold text-brand">
+              <Send className="size-4" aria-hidden /> {t.dashSendMarkOpen}
+            </a>
+          ) : d?.is_coach ? (
+            <a href={`#squad-${d.slaa_id}`} className="mt-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-bold text-brand">
+              <Users className="size-4" aria-hidden /> {t.dashNavSquad}
+            </a>
+          ) : null}
+        </div>
+      </aside>
+    </div>
   );
+}
+
+/** @deprecated Prefer DashHub — kept for any stray imports. */
+export function RecordHero(props: {
+  lang: Lang; t: Dict; r: MemberRecord; d: Dashboard | undefined; email: string | null;
+}) {
+  return <DashHub {...props}>{null}</DashHub>;
 }
 
 // ---------------------------------------------------------------------
@@ -314,55 +463,66 @@ export function AthleteDashboard({ lang, t, d, status, coachQuery, hits }: {
   const eventCodes = [...new Set([...d.events.map((e) => e.code), ...EVENTS.map((e) => e.code)])];
   const year = new Date().getFullYear();
 
-  const focus = nextAction(t, status, d);
+  // Prefer the ranked event with the richest year history for the hero trend.
+  const trendEvent = [...d.events]
+    .map((e) => ({ e, points: bestPerYear(e.code, [...d.marks.filter((m) => m.event === e.code && m.status === "approved"), { year: e.pb_year, mark: e.pb }]) }))
+    .sort((a, b) => b.points.length - a.points.length || (a.e.place && a.e.field && b.e.place && b.e.field ? a.e.place / a.e.field - b.e.place / b.e.field : 0))[0];
+  void status;
 
   return (
     <>
       <section className="flex flex-col gap-5">
-        <div className="dash-focus p-5 sm:p-6 dash-rise">
-          <p className={KICKER}>{t.dashFocusTitle}</p>
-          <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-xs font-bold tracking-[0.14em] text-muted uppercase">{t.dashNextAction}</p>
-              <p className="mt-1 text-lg font-bold tracking-tight sm:text-xl">{focus}</p>
+        <SectionHead id={`perf-${d.slaa_id}`} kicker={t.dashNavPerformance} title={t.dashEventsTitle}
+          intro={t.dashEventsIntro} icon={<Trophy className="size-5" aria-hidden />} />
+
+        <div className="grid gap-5 xl:grid-cols-[1.45fr_1fr]">
+          <div className={`${PANEL} min-h-64`}>
+            <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+              <div>
+                <h3 className="text-sm font-bold">{t.dashPerformanceTrend}</h3>
+                <p className="text-xs text-muted">{t.dashTrendPick}</p>
+              </div>
+              {trendEvent && <span className="text-xs font-bold text-brand">{eventLabel(lang, trendEvent.e.code)}</span>}
             </div>
-            <a href={`#send-${d.slaa_id}`} className={`${BUTTON} self-start`}>
-              <Send className="size-4" aria-hidden /> {t.dashSendMarkOpen}
-            </a>
+            {trendEvent && trendEvent.points.length >= 2 ? (
+              <TrendChart
+                code={trendEvent.e.code}
+                points={trendEvent.points}
+                label={`${eventLabel(lang, trendEvent.e.code)}: ${trendEvent.points.map((p) => `${p.year} ${p.mark}`).join(", ")}`}
+              />
+            ) : <p className="mt-8 text-sm text-muted">{t.dashNoTrendYet}</p>}
+          </div>
+          <div className={PANEL}>
+            <div className="mb-3 flex items-baseline justify-between gap-2">
+              <h3 className="text-sm font-bold">{t.dashActivityTitle}</h3>
+              <a href={`#send-${d.slaa_id}`} className={LINK}>{t.dashViewAll}</a>
+            </div>
+            {activity.length ? (
+              <ol className="flex flex-col">
+                {activity.slice(0, 4).map((m) => (
+                  <li key={m.id} className="flex items-center gap-3 border-b border-line py-3 last:border-0">
+                    <span className={`size-2.5 shrink-0 rounded-full ${
+                      { pending: "bg-amber-400", approved: "bg-emerald-500", rejected: "bg-clay", withdrawn: "bg-black/25" }[m.status]}`} aria-hidden />
+                    <span className="min-w-0 flex-1 text-sm">
+                      <strong>{eventLabel(lang, m.event)}</strong>
+                      <span className="mt-0.5 block text-xs text-muted">{t[`dashStatus_${m.status}` as keyof Dict]} · {m.year}</span>
+                    </span>
+                    <span className="font-mono text-sm font-bold tabular-nums">{m.mark}</span>
+                  </li>
+                ))}
+              </ol>
+            ) : <p className="text-sm text-muted">{t.dashActivityEmpty}</p>}
           </div>
         </div>
 
-        <SectionHead id={`perf-${d.slaa_id}`} kicker={t.dashNavPerformance} title={t.dashEventsTitle}
-          intro={t.dashEventsIntro} icon={<Trophy className="size-5" aria-hidden />} />
-        {(strength.length > 0 || activity.length > 0) && (
-          <div className="grid gap-5 lg:grid-cols-[1.3fr_1fr]">
-            <div className={PANEL}>
-              <h3 className="text-xs font-bold tracking-[0.14em] text-muted uppercase">{t.dashStrengthTitle}</h3>
-              <p className="mt-1 mb-4 text-sm text-muted">{t.dashStrengthHint}</p>
-              {strength.length ? <StrengthBars rows={strength} /> : <p className="text-sm text-muted">{t.dashNoPb}</p>}
-            </div>
-            <div className={PANEL}>
-              <h3 className="text-xs font-bold tracking-[0.14em] text-muted uppercase">{t.dashActivityTitle}</h3>
-              {activity.length ? (
-                <ol className="mt-4 flex flex-col">
-                  {activity.map((m) => (
-                    <li key={m.id} className="relative flex gap-3 pb-4 pl-1 last:pb-0">
-                      <span className={`relative mt-1 size-3 shrink-0 rounded-full ring-4 ring-white ${
-                        { pending: "bg-gold", approved: "bg-emerald-600", rejected: "bg-clay", withdrawn: "bg-black/25" }[m.status]}`} aria-hidden />
-                      <span className="text-sm">
-                        <strong>{eventLabel(lang, m.event)}</strong> <span className="font-mono font-bold">{m.mark}</span>
-                        <span className="block text-xs text-muted">
-                          {t[`dashStatus_${m.status}` as keyof Dict]} · {m.year}{m.competition ? ` · ${m.competition}` : ""}
-                          {m.note ? ` · “${m.note}”` : ""}
-                        </span>
-                      </span>
-                    </li>
-                  ))}
-                </ol>
-              ) : <p className="mt-3 text-sm text-muted">{t.dashActivityEmpty}</p>}
-            </div>
+        {(strength.length > 0) && (
+          <div className={PANEL}>
+            <h3 className="text-sm font-bold">{t.dashStrengthTitle}</h3>
+            <p className="mt-1 mb-4 text-sm text-muted">{t.dashStrengthHint}</p>
+            <StrengthBars rows={strength} />
           </div>
         )}
+
         {d.events.length ? (
           <div className="grid gap-5 md:grid-cols-2">
             {d.events.map((e) => <EventCard key={e.code} lang={lang} t={t} e={e} marks={d.marks} slaaId={d.slaa_id} />)}
@@ -370,9 +530,9 @@ export function AthleteDashboard({ lang, t, d, status, coachQuery, hits }: {
         ) : <Notice>{t.dashNoEvents}</Notice>}
         <p className="text-xs text-muted">{t.dashRankNote}</p>
 
-        <div id={`send-${d.slaa_id}`} className={`${PANEL} scroll-mt-28 border-l-4 border-accent`}>
+        <div id={`send-${d.slaa_id}`} className={`${PANEL} scroll-mt-28 border-l-4 border-brand`}>
           <h3 className="flex items-center gap-2 text-lg font-bold">
-            <Send className="size-4 text-accent" aria-hidden /> {t.dashSendMark}
+            <Send className="size-4 text-brand" aria-hidden /> {t.dashSendMark}
           </h3>
           <p className="mt-2 text-sm text-muted">{active.length ? t.dashSendMarkIntro : t.dashSendMarkNoCoach}</p>
           <form action={act.sendMark} className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -858,7 +1018,7 @@ export function PrivacyCard({ lang, t, d }: { lang: Lang; t: Dict; d: Dashboard 
   return (
     <div id={`privacy-${d.slaa_id}`} className="scroll-mt-28">
       <div className={`${PANEL} flex h-full flex-col`}>
-        <h2 className="flex items-center gap-2 text-lg font-bold"><EyeOff className="size-5 text-accent" aria-hidden /> {t.dashPrivacyTitle}</h2>
+        <h2 className="flex items-center gap-2 text-lg font-bold"><EyeOff className="size-5 text-brand" aria-hidden /> {t.dashPrivacyTitle}</h2>
         <p className="mt-1 text-sm text-muted">{t.dashPrivacyIntro}</p>
         <form action={act.savePrivacy} className="mt-4 flex flex-col">
           <Hidden lang={lang} slaaId={d.slaa_id} />
@@ -867,7 +1027,7 @@ export function PrivacyCard({ lang, t, d }: { lang: Lang; t: Dict; d: Dashboard 
               <span className="pr-3 leading-snug">{label}</span>
               <span className="relative inline-flex shrink-0">
                 <input type="checkbox" name={key} defaultChecked={!!d.privacy[key]} className="peer sr-only" />
-                <span className="h-7 w-12 rounded-full bg-black/15 transition-colors peer-checked:bg-accent peer-focus-visible:outline-2 peer-focus-visible:outline-accent" />
+                <span className="h-7 w-12 rounded-full bg-black/15 transition-colors peer-checked:bg-brand peer-focus-visible:outline-2 peer-focus-visible:outline-brand" />
                 <span className="absolute top-1 left-1 size-5 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-5" />
               </span>
             </label>

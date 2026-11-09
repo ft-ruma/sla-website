@@ -2,7 +2,7 @@ import { ChevronDown, IdCard, LogOut, ShieldCheck } from "lucide-react";
 import { redirect } from "next/navigation";
 import { Notice } from "@/components/bits";
 import { ChangePassword } from "@/components/MemberForms";
-import { AthleteDashboard, CoachDashboard, PrivacyCard, RecordHero } from "@/components/Dashboard";
+import { AthleteDashboard, CoachDashboard, DashHub, PrivacyCard } from "@/components/Dashboard";
 import type { DashMessage } from "@/lib/dashboard-actions";
 import { coachSearch, dashboard, dashboardAvailable, type CoachHit, type Dashboard } from "@/lib/member-dashboard";
 import { Container } from "@/components/PageHero";
@@ -59,45 +59,40 @@ export default async function AccountPage({
       {records.map((r) => {
         const d = boards.get(r.slaa_id);
         return (
-          <div key={r.slaa_id} id={`r-${r.slaa_id}`} className="scroll-mt-20 border-b border-line last:border-b-0">
-            <RecordHero lang={lang} t={t} r={r} d={d} email={multiple ? null : member.email} />
-            <div className="dash-shell">
-            <Container className="flex flex-col gap-12 py-10 sm:gap-14 sm:py-14">
-              {message && s.r === r.slaa_id && (
-                <p role={GOOD.includes(message) ? "status" : "alert"}
-                  className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold ${GOOD.includes(message) ? "dash-toast-ok" : "dash-toast-err"}`}>
-                  {t[`dashMsg_${message}` as keyof Dict]}
-                </p>
-              )}
-              {d?.is_athlete && (
-                <AthleteDashboard lang={lang} t={t} d={d} status={r.status}
-                  coachQuery={s.for === r.slaa_id ? coachQuery : ""}
-                  hits={s.for === r.slaa_id ? hits : null} />
-              )}
-              {d?.is_coach && d.coach && <CoachDashboard lang={lang} t={t} d={d} />}
-              <details id={`details-${r.slaa_id}`} className="group dash-panel scroll-mt-28 overflow-hidden" open={!d}>
-                <summary className="flex cursor-pointer items-center justify-between gap-3 px-5 py-4 font-bold select-none sm:px-6">
-                  <span className="flex items-center gap-2"><IdCard className="size-5 text-accent" aria-hidden /> {t.dashDetailsTitle}</span>
-                  <ChevronDown className="size-5 transition-transform group-open:rotate-180" aria-hidden />
-                </summary>
-                <div className="border-t border-line"><RecordCard lang={lang} t={t} r={r} /></div>
-              </details>
-              {d && <PrivacyCard lang={lang} t={t} d={d} />}
-            </Container>
-            </div>
-          </div>
+          <DashHub key={r.slaa_id} lang={lang} t={t} r={r} d={d} email={multiple ? null : member.email}>
+            {message && s.r === r.slaa_id && (
+              <p role={GOOD.includes(message) ? "status" : "alert"}
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold ${GOOD.includes(message) ? "dash-toast-ok" : "dash-toast-err"}`}>
+                {t[`dashMsg_${message}` as keyof Dict]}
+              </p>
+            )}
+            {d?.is_athlete && (
+              <AthleteDashboard lang={lang} t={t} d={d} status={r.status}
+                coachQuery={s.for === r.slaa_id ? coachQuery : ""}
+                hits={s.for === r.slaa_id ? hits : null} />
+            )}
+            {d?.is_coach && d.coach && <CoachDashboard lang={lang} t={t} d={d} />}
+            <details id={`details-${r.slaa_id}`} className="group dash-panel scroll-mt-28 overflow-hidden" open={!d}>
+              <summary className="flex cursor-pointer items-center justify-between gap-3 px-5 py-4 font-bold select-none sm:px-6">
+                <span className="flex items-center gap-2"><IdCard className="size-5 text-brand" aria-hidden /> {t.dashDetailsTitle}</span>
+                <ChevronDown className="size-5 transition-transform group-open:rotate-180" aria-hidden />
+              </summary>
+              <div className="border-t border-line"><RecordCard lang={lang} t={t} r={r} /></div>
+            </details>
+            {d && <PrivacyCard lang={lang} t={t} d={d} />}
+          </DashHub>
         );
       })}
 
-      <section className="border-t border-line dash-shell">
+      <section className="border-t border-line bg-[#eef1f8]">
         <Container className="grid gap-6 py-12 lg:grid-cols-[1.2fr_1fr]">
           <div className="dash-panel p-6 sm:p-8">
-            <p className="text-xs font-bold tracking-[0.18em] text-accent uppercase">{t.dashSettingsTitle}</p>
+            <p className="text-xs font-bold tracking-[0.18em] text-brand uppercase">{t.dashSettingsTitle}</p>
             <h2 className="mt-1 text-lg font-bold">{t.passwordTitle}</h2>
             <p className="mt-1 mb-5 text-sm text-muted">{t.passwordChangeText}</p>
             <ChangePassword lang={lang} t={t} />
           </div>
-          <div className="dash-panel flex flex-col justify-end gap-5 bg-gradient-to-br from-white to-sand p-6">
+          <div className="dash-panel flex flex-col justify-end gap-5 bg-gradient-to-br from-white to-[#e8ecf8] p-6">
             <p className="flex gap-3 text-sm text-muted">
               <ShieldCheck className="mt-0.5 size-5 shrink-0 text-brand" aria-hidden />
               {t.accountPrivate}
