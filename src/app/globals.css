@@ -27,6 +27,220 @@ header:has(.sample-notice) {
   --header-h: 6.75rem;
 }
 
+/* Public site header — clear on phone, tablet chips, desktop with icons */
+.site-header {
+  background: rgb(255 255 255 / 0.92);
+  backdrop-filter: blur(16px) saturate(1.35);
+  -webkit-backdrop-filter: blur(16px) saturate(1.35);
+  box-shadow: 0 1px 0 rgb(17 17 17 / 0.06), 0 12px 28px -22px rgb(17 24 60 / 0.35);
+}
+.site-header-bar {
+  position: relative;
+}
+.site-header-bar::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--color-accent) 0%, var(--color-brand) 55%, transparent 100%);
+  opacity: 0.9;
+}
+.site-brand-mark {
+  display: grid;
+  place-items: center;
+  border-radius: 1rem;
+  background: linear-gradient(145deg, rgb(6 7 248 / 0.08), rgb(232 93 4 / 0.08));
+  padding: 0.2rem;
+  box-shadow: inset 0 0 0 1px rgb(17 17 17 / 0.05);
+}
+.site-main-nav {
+  display: none;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: 0.2rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  mask-image: linear-gradient(90deg, transparent, #000 0.4rem, #000 calc(100% - 0.8rem), transparent);
+  padding-inline: 0.15rem;
+}
+.site-main-nav::-webkit-scrollbar { display: none; }
+@media (min-width: 768px) {
+  .site-main-nav { display: flex; }
+}
+.site-main-link {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 750;
+  color: rgb(17 17 17 / 0.62);
+  white-space: nowrap;
+  transition: background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
+}
+.site-main-link:hover {
+  background: rgb(6 7 248 / 0.06);
+  color: var(--color-ink);
+}
+.site-main-link.is-active,
+.site-main-link[aria-current="page"] {
+  background: rgb(6 7 248 / 0.1);
+  color: var(--color-brand);
+  box-shadow: inset 0 -2px 0 var(--color-accent);
+}
+.site-main-link-label {
+  max-width: 6.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (min-width: 1024px) {
+  .site-main-link {
+    padding: 0.6rem 0.95rem;
+    font-size: 0.88rem;
+  }
+  .site-main-link-label { max-width: none; }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .site-main-link {
+    flex-direction: column;
+    gap: 0.15rem;
+    border-radius: 1rem;
+    padding: 0.45rem 0.55rem;
+    min-width: 4.4rem;
+  }
+  .site-main-link-label {
+    max-width: 4.6rem;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+  }
+}
+.site-lang {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  border-radius: 999px;
+  background: rgb(17 17 17 / 0.04);
+  padding: 0.2rem;
+}
+.site-lang-link {
+  display: grid;
+  min-width: 2.35rem;
+  height: 2.15rem;
+  place-items: center;
+  border-radius: 999px;
+  padding: 0 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: rgb(17 17 17 / 0.45);
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.site-lang-link:hover { color: var(--color-ink); background: white; }
+.site-lang-link[aria-current="true"] {
+  background: var(--color-night);
+  color: white;
+}
+.site-header-ghost {
+  height: 2.65rem;
+  border-radius: 999px;
+  padding: 0 0.95rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-ink);
+  box-shadow: inset 0 0 0 1px rgb(17 17 17 / 0.12);
+  transition: background 0.12s ease;
+}
+.site-header-ghost:hover { background: rgb(17 17 17 / 0.04); }
+.site-header-cta {
+  height: 2.65rem;
+  align-items: center;
+  border-radius: 999px;
+  background: var(--color-accent);
+  padding: 0 1.05rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: white;
+  box-shadow: 0 10px 22px -12px rgb(232 93 4 / 0.75);
+  transition: opacity 0.12s ease, transform 0.12s ease;
+}
+.site-header-cta:hover { opacity: 0.94; }
+.site-header-cta:active { transform: scale(0.98); }
+.site-menu-btn {
+  display: inline-flex;
+  height: 2.65rem;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 999px;
+  background: white;
+  padding: 0 0.85rem 0 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--color-ink);
+  box-shadow: inset 0 0 0 1px rgb(17 17 17 / 0.12), 0 8px 18px -14px rgb(17 24 60 / 0.35);
+  transition: background 0.12s ease, box-shadow 0.12s ease;
+}
+.site-menu-btn:hover {
+  background: rgb(6 7 248 / 0.05);
+  box-shadow: inset 0 0 0 1px var(--color-brand);
+}
+.site-menu-btn-label { display: none; }
+@media (min-width: 480px) {
+  .site-menu-btn-label { display: inline; }
+}
+.site-drawer {
+  background: #f3f5fb;
+}
+.site-drawer-group {
+  overflow: hidden;
+  border-radius: 1.25rem;
+  background: white;
+  box-shadow: 0 0 0 1px rgb(17 17 17 / 0.05), 0 14px 30px -22px rgb(17 24 60 / 0.3);
+}
+.site-drawer-group-title {
+  border-bottom: 1px solid var(--color-line);
+  padding: 0.8rem 1rem;
+  font-size: 0.7rem;
+  font-weight: 850;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+.site-drawer-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-bottom: 1px solid rgb(17 17 17 / 0.05);
+  padding: 0.85rem 1rem;
+  font-size: 1.02rem;
+  color: var(--color-ink);
+  transition: background 0.12s ease;
+}
+.site-drawer-link:last-child { border-bottom: 0; }
+.site-drawer-link:hover,
+.site-drawer-link:active { background: #f6f7fb; }
+.site-drawer-link.is-active {
+  background: rgb(232 93 4 / 0.06);
+  color: var(--color-accent);
+}
+.site-drawer-icon {
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  place-items: center;
+  border-radius: 0.9rem;
+  background: #eef1f8;
+  color: var(--color-ink);
+}
+.site-drawer-icon.is-active {
+  background: var(--color-accent);
+  color: white;
+}
+
 /* Soft corners on every control. This sits in the base layer after
    Tailwind's reset (which squares them), so any rounded-* class still wins. */
 @layer base {

@@ -4,6 +4,7 @@ export const en = {
   metaDescription: "News, competitions, results, rankings and records from Sri Lanka Athletics, in Sinhala, Tamil and English.",
   skipToContent: "Skip to content",
   menu: "Menu",
+  navMore: "More",
   close: "Close",
   language: "Language",
   sampleNotice: "Preview: news, calendar, results, rankings and records on this site are sample content until SLA publishes official data.",
