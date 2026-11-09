@@ -211,6 +211,8 @@ export const en = {
   footerExplore: "Explore",
   footerJoin: "Join",
   footerLegal: "Legal",
+  footerBuiltBy: "Built by",
+  footerAscendIt: "Ascend IT Pvt Ltd",
   rights: "All rights reserved.",
   notFoundTitle: "Page not found",
   notFoundText: "The page you are looking for does not exist or has moved.",

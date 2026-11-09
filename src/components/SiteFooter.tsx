@@ -44,6 +44,33 @@ export function SiteFooter({ lang, t }: { lang: Lang; t: Dict }) {
             <Link href={`/${lang}/terms`} className="hover:text-white">{t.navTerms}</Link>
           </div>
         </div>
+        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 pb-6 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <a
+            href="https://www.ascendit.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2.5 text-xs text-white/55 transition hover:text-white/80"
+          >
+            <span className="font-medium tracking-wide">{t.footerBuiltBy}</span>
+            <span className="inline-flex items-center rounded-md bg-white px-2 py-1 shadow-sm ring-1 ring-white/20">
+              <Image
+                src="/brand/ascendit-logo.jpg"
+                alt={t.footerAscendIt}
+                width={120}
+                height={28}
+                className="h-6 w-auto object-contain object-center"
+              />
+            </span>
+          </a>
+          <a
+            href="https://www.ascendit.dev"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-white/45 underline-offset-2 hover:text-white hover:underline"
+          >
+            www.ascendit.dev
+          </a>
+        </div>
       </div>
     </footer>
   );

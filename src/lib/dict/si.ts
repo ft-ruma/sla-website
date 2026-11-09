@@ -199,6 +199,8 @@ export const si: Dict = {
   footerExplore: "ගවේෂණය",
   footerJoin: "එක් වන්න",
   footerLegal: "නීතිමය",
+  footerBuiltBy: "නිර්මාණය",
+  footerAscendIt: "Ascend IT Pvt Ltd",
   rights: "සියලු හිමිකම් ඇවිරිණි.",
   notFoundTitle: "පිටුව හමු නොවීය",
   notFoundText: "ඔබ සොයන පිටුව නොපවතී, නැතහොත් වෙනත් තැනකට ගෙන ගොස් ඇත.",
