@@ -6,7 +6,7 @@ import { getItem } from "@/lib/cms-admin";
 import { requireEditor } from "@/lib/cms-auth";
 import { deleteNews, saveNews } from "../../../actions";
 import { ConfirmButton } from "../../../Confirm";
-import { DANGER, Flash, INPUT, LABEL, LangFields, PageHead, SAVE, Section, Toggle } from "../../../ui";
+import { DANGER, Flash, INPUT, LABEL, LangFields, PageHead, PendingButton, SAVE, Section, Toggle } from "../../../ui";
 
 const CATEGORIES = { news: "News", press: "Press release", development: "Development", integrity: "Clean sport" };
 const today = () => new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Colombo" });
@@ -75,7 +75,7 @@ export default async function EditNews({ params, searchParams }: {
           </label>
         </Section>
         <div className="flex flex-wrap items-center gap-3">
-          <button className={SAVE}>{isNew ? "Save" : "Save changes"}</button>
+          <PendingButton className={SAVE}>{isNew ? "Save" : "Save changes"}</PendingButton>
         </div>
       </form>
       {!isNew && (

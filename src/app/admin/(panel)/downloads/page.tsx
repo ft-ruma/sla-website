@@ -4,7 +4,7 @@ import { listItems } from "@/lib/cms-admin";
 import { requireEditor } from "@/lib/cms-auth";
 import { deleteDownload, saveDownload } from "../../actions";
 import { ConfirmButton } from "../../Confirm";
-import { Flash, INPUT, LABEL, LangFields, PageHead, SAVE, Section } from "../../ui";
+import { Flash, INPUT, LABEL, LangFields, PageHead, PendingButton, SAVE, Section } from "../../ui";
 
 export default async function Downloads({ searchParams }: { searchParams: Promise<{ msg?: string; err?: string }> }) {
   await requireEditor();
@@ -21,7 +21,7 @@ export default async function Downloads({ searchParams }: { searchParams: Promis
             <label className={LABEL}>Date *<input type="date" name="date" required defaultValue={new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Colombo" })} className={INPUT} /></label>
             <label className={LABEL}>PDF file * (up to 15 MB)<input type="file" name="file" required accept="application/pdf" className="pt-2 text-sm" /></label>
           </div>
-          <div><button className={SAVE}>Upload</button></div>
+          <div><PendingButton className={SAVE} pendingLabel="Uploading…">Upload</PendingButton></div>
         </Section>
       </form>
       <div className="card overflow-hidden">

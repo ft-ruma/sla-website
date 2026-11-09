@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Notice } from "@/components/bits";
 import { ChangePassword } from "@/components/MemberForms";
 import { AthleteDashboard, CoachDashboard, DashHub, PrivacyCard } from "@/components/Dashboard";
+import { DashPendingButton } from "@/components/DashPendingButton";
 import type { DashMessage } from "@/lib/dashboard-actions";
 import { coachSearch, dashboard, dashboardAvailable, type CoachHit, type Dashboard } from "@/lib/member-dashboard";
 import { Container } from "@/components/PageHero";
@@ -99,9 +100,9 @@ export default async function AccountPage({
             </p>
             <form action={signOut}>
               <input type="hidden" name="lang" value={lang} />
-              <button type="submit" className="dash-btn-ghost border-ink/20">
+              <DashPendingButton type="submit" className="dash-btn-ghost border-ink/20" pendingLabel="…">
                 <LogOut className="size-4" aria-hidden /> {t.signOut}
-              </button>
+              </DashPendingButton>
             </form>
           </div>
         </Container>

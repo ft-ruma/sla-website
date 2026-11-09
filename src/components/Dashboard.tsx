@@ -16,6 +16,8 @@ import {
   Sparkline, SplitBar, standing, StrengthBars, topPercent, TrendChart,
 } from "./DashboardCharts";
 import { markValue } from "@/lib/marks";
+import { DashPendingButton } from "./DashPendingButton";
+import { HubRailNav } from "./HubRailNav";
 
 // Performance Hub: left rail, centre analytics, right insights. Server-rendered;
 // forms post to lib/dashboard-actions.ts.
@@ -242,13 +244,10 @@ export function DashHub({ lang, t, r, d, email, children }: {
             <p className="text-sm font-bold text-ink">{t.accountTitle}</p>
           </div>
         </div>
-        <nav className="hub-rail-nav">
-          {nav.map(([id, label, Icon], i) => (
-            <a key={id} href={`#${id}`} className={`hub-rail-link${i === 0 ? " is-active" : ""}`}>
-              <Icon className="size-4" aria-hidden /><span>{label}</span>
-            </a>
-          ))}
-        </nav>
+        <HubRailNav
+          ariaLabel={t.dashJumpTo}
+          items={nav.map(([id, label, Icon]) => ({ id, label, Icon }))}
+        />
         <div className="hub-rail-cta">
           <p className="text-xs font-bold tracking-[0.14em] text-white/70 uppercase">{t.dashFocusCta}</p>
           <p className="mt-2 text-sm font-semibold leading-snug text-white">{focus}</p>
@@ -663,9 +662,9 @@ export function AthleteDashboard({ lang, t, d, status, coachQuery, hits }: {
               {t.dashCompetition}
               <input name="competition" maxLength={120} className={INPUT} />
             </label>
-            <button className={`${BUTTON} sm:col-span-2 lg:col-span-4 sm:justify-self-start`}>
+            <DashPendingButton className={`${BUTTON} sm:col-span-2 lg:col-span-4 sm:justify-self-start`} pendingLabel="…">
               <Send className="size-4" aria-hidden /> {t.dashSendMarkButton}
-            </button>
+            </DashPendingButton>
           </form>
         </div>
       </section>
@@ -737,14 +736,14 @@ export function AthleteDashboard({ lang, t, d, status, coachQuery, hits }: {
                         <Hidden lang={lang} slaaId={d.slaa_id} />
                         <input type="hidden" name="coachId" value={h.slaa_id} />
                         <input type="hidden" name="mode" value="replace" />
-                        <button className={DARK}>{t.dashSwitchTo}</button>
+                        <DashPendingButton className={DARK}>{t.dashSwitchTo}</DashPendingButton>
                       </form>
                     )}
                     <form action={act.requestCoach}>
                       <Hidden lang={lang} slaaId={d.slaa_id} />
                       <input type="hidden" name="coachId" value={h.slaa_id} />
                       <input type="hidden" name="mode" value="add" />
-                      <button className={active.length ? GHOST : DARK}>{active.length ? t.dashAddCoach : t.dashRequestCoach}</button>
+                      <DashPendingButton className={active.length ? GHOST : DARK}>{active.length ? t.dashAddCoach : t.dashRequestCoach}</DashPendingButton>
                     </form>
                   </span>
                 </li>
@@ -996,9 +995,9 @@ export function CoachDashboard({ lang, t, d }: { lang: Lang; t: Dict; d: Dashboa
                         <Hidden lang={lang} slaaId={d.slaa_id} />
                         <input type="hidden" name="link" value={r.link} />
                         <input type="hidden" name="decision" value={decision} />
-                        <button className={decision === "accept" ? DARK : GHOST}>
+                        <DashPendingButton className={decision === "accept" ? DARK : GHOST}>
                           {decision === "accept" ? <><Check className="size-3.5" aria-hidden /> {t.dashAccept}</> : <><X className="size-3.5" aria-hidden /> {t.dashDecline}</>}
-                        </button>
+                        </DashPendingButton>
                       </form>
                     ))}
                   </span>
@@ -1030,7 +1029,7 @@ export function CoachDashboard({ lang, t, d }: { lang: Lang; t: Dict; d: Dashboa
                       <Hidden lang={lang} slaaId={d.slaa_id} />
                       <input type="hidden" name="markId" value={m.id} />
                       <input type="hidden" name="decision" value="accept" />
-                      <button className={DARK}><Check className="size-3.5" aria-hidden /> {t.dashApproveMark}</button>
+                      <DashPendingButton className={DARK}><Check className="size-3.5" aria-hidden /> {t.dashApproveMark}</DashPendingButton>
                     </form>
                     <form action={act.decideMark} className="flex gap-2">
                       <Hidden lang={lang} slaaId={d.slaa_id} />
@@ -1038,7 +1037,7 @@ export function CoachDashboard({ lang, t, d }: { lang: Lang; t: Dict; d: Dashboa
                       <input type="hidden" name="decision" value="decline" />
                       <input name="note" maxLength={500} placeholder={t.dashRejectReason} aria-label={t.dashRejectReason}
                         className="dash-input h-9 w-44 text-xs" />
-                      <button className={GHOST}>{t.dashRejectMark}</button>
+                      <DashPendingButton className={GHOST}>{t.dashRejectMark}</DashPendingButton>
                     </form>
                   </div>
                 </li>
@@ -1140,7 +1139,7 @@ export function PrivacyCard({ lang, t, d }: { lang: Lang; t: Dict; d: Dashboard 
               </span>
             </label>
           ))}
-          <button className={`${BUTTON} mt-5 self-start`}>{t.dashSavePrivacy}</button>
+          <DashPendingButton className={`${BUTTON} mt-5 self-start`}>{t.dashSavePrivacy}</DashPendingButton>
         </form>
       </div>
     </div>

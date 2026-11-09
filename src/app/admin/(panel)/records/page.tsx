@@ -4,7 +4,7 @@ import { requireEditor } from "@/lib/cms-auth";
 import { EVENTS, formatMark, formatWind, getEvent } from "@/lib/events";
 import { deleteRecord, saveRecord } from "../../actions";
 import { ConfirmButton } from "../../Confirm";
-import { Flash, INPUT, LABEL, PageHead, Section } from "../../ui";
+import { Flash, INPUT, LABEL, PageHead, PendingButton, Section } from "../../ui";
 
 function RecordForm({ r, k }: { r?: NationalRecord; k?: string }) {
   return (
@@ -35,7 +35,7 @@ function RecordForm({ r, k }: { r?: NationalRecord; k?: string }) {
       <label className={LABEL}>Year *<input name="year" type="number" required min={1900} max={2100} defaultValue={r?.year ?? new Date().getFullYear()} className={INPUT} /></label>
       <label className={LABEL}>Venue<input name="venue" defaultValue={r?.venue} className={INPUT} /></label>
       <div className="flex items-end gap-2 lg:col-span-5">
-        <button className="btn btn-primary h-10">{k ? "Save" : "Add record"}</button>
+        <PendingButton className="btn btn-primary h-10">{k ? "Save" : "Add record"}</PendingButton>
       </div>
     </form>
   );

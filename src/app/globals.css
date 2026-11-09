@@ -72,6 +72,24 @@ header:has(.sample-notice) {
     border-radius: 0.75rem;
     touch-action: manipulation;
   }
+  /* Tailwind v4 leaves buttons as cursor:default — restore pointer for clickables. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  a[href],
+  summary {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: wait;
+  }
+}
+
+@keyframes admin-progress {
+  from { transform: translateX(-120%); }
+  to { transform: translateX(320%); }
+}
+.admin-progress {
+  animation: admin-progress 1.1s ease-in-out infinite;
 }
 
 @layer components {
@@ -657,10 +675,12 @@ html:lang(si) :is(h1, h2, h3), html:lang(ta) :is(h1, h2, h3) { line-height: 1.35
   font-size: 0.9rem;
   font-weight: 750;
   color: white;
+  cursor: pointer;
   transition: background 0.12s ease, transform 0.12s ease;
 }
 .dash-btn:hover { background: var(--color-brand-deep); }
 .dash-btn:active { transform: scale(0.98); }
+.dash-btn:disabled { cursor: wait; opacity: 0.65; }
 .dash-btn-ghost {
   display: inline-flex;
   min-height: 2.35rem;
@@ -673,9 +693,11 @@ html:lang(si) :is(h1, h2, h3), html:lang(ta) :is(h1, h2, h3) { line-height: 1.35
   padding: 0.4rem 0.9rem;
   font-size: 0.78rem;
   font-weight: 750;
+  cursor: pointer;
   transition: border-color 0.12s ease, background 0.12s ease;
 }
 .dash-btn-ghost:hover { border-color: var(--color-brand); background: rgb(6 7 248 / 0.05); }
+.dash-btn-ghost:disabled { cursor: wait; opacity: 0.65; }
 .dash-toast-ok {
   border-radius: 1rem;
   border: 1px solid rgb(5 150 105 / 0.25);
@@ -689,10 +711,11 @@ html:lang(si) :is(h1, h2, h3), html:lang(ta) :is(h1, h2, h3) { line-height: 1.35
   color: rgb(127 29 29);
 }
 @keyframes dash-in {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: none; }
 }
-.dash-rise { animation: dash-in 0.45s ease-out both; }
+/* Keep enter motion short so post-action redirects don't feel sluggish. */
+.dash-rise { animation: dash-in 0.18s ease-out both; }
 @media (prefers-reduced-motion: reduce) {
   .dash-rise,
   .hub-athlete-orb { animation: none; }

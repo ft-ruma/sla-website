@@ -39,8 +39,9 @@ function back(path: string, msg: string, errors: string[] = []): never {
 }
 
 function refresh() {
+  // Public pages read CMS through the "cms" tag — revalidating the whole
+  // /[lang] layout on every save made admin clicks feel stuck for seconds.
   revalidateTag("cms");
-  revalidatePath("/[lang]", "layout");
 }
 
 async function upload(form: FormData, name: string, want: "image" | "pdf", errors: string[]) {

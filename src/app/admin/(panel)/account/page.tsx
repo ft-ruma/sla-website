@@ -1,6 +1,6 @@
 import { requireEditor } from "@/lib/cms-auth";
 import { changePassword } from "../../actions";
-import { Flash, INPUT, LABEL, PageHead, SAVE, Section } from "../../ui";
+import { Flash, INPUT, LABEL, PageHead, PendingButton, SAVE, Section } from "../../ui";
 
 export default async function Account({ searchParams }: { searchParams: Promise<{ msg?: string; first?: string }> }) {
   const { editor } = await requireEditor({ allowPasswordChange: true });
@@ -21,7 +21,7 @@ export default async function Account({ searchParams }: { searchParams: Promise<
             <label className={LABEL}>Repeat it<input type="password" name="confirm" required maxLength={200} autoComplete="new-password" className={INPUT} /></label>
           </div>
           <p className="text-xs text-muted">Saving signs you out on your other devices.</p>
-          <div><button className={SAVE}>Save password</button></div>
+          <div><PendingButton className={SAVE}>Save password</PendingButton></div>
         </Section>
       </form>
     </>

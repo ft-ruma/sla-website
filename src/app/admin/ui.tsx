@@ -1,4 +1,5 @@
 import { CircleAlert, CircleCheck } from "lucide-react";
+export { PendingButton } from "./PendingButton";
 
 // Small building blocks for the admin forms.
 

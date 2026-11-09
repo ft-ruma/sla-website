@@ -6,7 +6,7 @@ import type { InfoPage } from "@/content/pages";
 import { listItems } from "@/lib/cms-admin";
 import { requireEditor } from "@/lib/cms-auth";
 import { savePage } from "../../../actions";
-import { Flash, LangFields, PageHead, SAVE, Section, Toggle } from "../../../ui";
+import { Flash, LangFields, PageHead, PendingButton, SAVE, Section, Toggle } from "../../../ui";
 import { PAGE_PATHS } from "../paths";
 
 export default async function EditPage({ params, searchParams }: {
@@ -43,7 +43,7 @@ export default async function EditPage({ params, searchParams }: {
             {s && <p className="text-xs text-muted">Empty the English heading to remove this section.</p>}
           </Section>
         ))}
-        <div><button className={SAVE}>Save page</button></div>
+        <div><PendingButton className={SAVE}>Save page</PendingButton></div>
       </form>
     </>
   );

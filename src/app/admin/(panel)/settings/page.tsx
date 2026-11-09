@@ -2,7 +2,7 @@ import { getDict } from "@/lib/i18n";
 import { getSettings } from "@/lib/cms";
 import { requireEditor } from "@/lib/cms-auth";
 import { saveSettings } from "../../actions";
-import { Flash, LangFields, PageHead, SAVE, Section, Toggle } from "../../ui";
+import { Flash, LangFields, PageHead, PendingButton, SAVE, Section, Toggle } from "../../ui";
 
 export default async function Settings({ searchParams }: { searchParams: Promise<{ msg?: string }> }) {
   await requireEditor();
@@ -25,7 +25,7 @@ export default async function Settings({ searchParams }: { searchParams: Promise
           <LangFields name="heroTitle" label="Title" value={s.heroTitle ?? builtIn("heroTitle")} max={120} />
           <LangFields name="heroText" label="Text" value={s.heroText ?? builtIn("heroText")} rows={2} />
         </Section>
-        <div><button className={SAVE}>Save settings</button></div>
+        <div><PendingButton className={SAVE}>Save settings</PendingButton></div>
       </form>
     </>
   );

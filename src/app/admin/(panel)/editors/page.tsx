@@ -1,7 +1,7 @@
 import { listEditors } from "@/lib/cms-admin";
 import { requireEditor } from "@/lib/cms-auth";
 import { createEditor, updateEditor } from "../../actions";
-import { Flash, INPUT, LABEL, PageHead, SAVE, Section } from "../../ui";
+import { Flash, INPUT, LABEL, PageHead, PendingButton, SAVE, Section } from "../../ui";
 
 const SMALL = "rounded-full px-3 py-1.5 text-xs font-bold ring-1 ring-black/15 hover:ring-ink";
 
@@ -35,7 +35,7 @@ export default async function Editors({ searchParams }: { searchParams: Promise<
             </label>
           </div>
           <p className="text-xs text-muted">Give them the temporary password in person or by phone. They must choose their own at first sign-in.</p>
-          <div><button className={SAVE}>Add editor</button></div>
+          <div><PendingButton className={SAVE}>Add editor</PendingButton></div>
         </Section>
       </form>
       <div className="card overflow-hidden">

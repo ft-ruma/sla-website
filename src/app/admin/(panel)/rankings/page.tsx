@@ -7,7 +7,7 @@ import { EVENTS, formatMark, getEvent } from "@/lib/events";
 import { rowsToText } from "@/lib/mark-input";
 import { deleteRanking, saveRanking } from "../../actions";
 import { ConfirmButton } from "../../Confirm";
-import { DANGER, Flash, INPUT, LABEL, PageHead, SAVE, Section, TEXTAREA } from "../../ui";
+import { DANGER, Flash, INPUT, LABEL, PageHead, PendingButton, SAVE, Section, TEXTAREA } from "../../ui";
 
 export default async function Rankings({ searchParams }: { searchParams: Promise<{ msg?: string; err?: string; edit?: string }> }) {
   await requireEditor();
@@ -57,7 +57,7 @@ export default async function Rankings({ searchParams }: { searchParams: Promise
                 placeholder="K. D. Perera, Sri Lanka Army Sports Club, 10.21, +1.4, 2026-07-12, Air Force Open"
                 className={`${TEXTAREA} font-mono`} />
             </label>
-            <div><button className={SAVE}>Save list</button></div>
+            <div><PendingButton className={SAVE}>Save list</PendingButton></div>
           </Section>
         </form>
       )}

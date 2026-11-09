@@ -9,7 +9,7 @@ import { EVENTS } from "@/lib/events";
 import { rowsToText } from "@/lib/mark-input";
 import { deleteCompetition, saveCompetition } from "../../../actions";
 import { ConfirmButton } from "../../../Confirm";
-import { DANGER, Flash, INPUT, LABEL, LangFields, PageHead, SAVE, Section, TEXTAREA, Toggle } from "../../../ui";
+import { DANGER, Flash, INPUT, LABEL, LangFields, PageHead, PendingButton, SAVE, Section, TEXTAREA, Toggle } from "../../../ui";
 
 const CATEGORIES = {
   national: "National", provincial: "Provincial", schools: "Schools", university: "University",
@@ -119,7 +119,7 @@ export default async function EditCompetition({ params, searchParams }: {
           ))}
         </Section>
 
-        <div><button className={SAVE}>{isNew ? "Save competition" : "Save changes"}</button></div>
+        <div><PendingButton className={SAVE}>{isNew ? "Save competition" : "Save changes"}</PendingButton></div>
       </form>
       {!isNew && (
         <form action={deleteCompetition} className="border-t border-black/10 pt-5">
