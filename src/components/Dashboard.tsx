@@ -1,5 +1,5 @@
 import {
-  BadgeCheck, CalendarDays, Check, CircleCheck, Clock, EyeOff, LayoutDashboard, MapPin, Search, Send,
+  BadgeCheck, CalendarDays, Check, CircleCheck, Clock, EyeOff, MapPin, Search, Send,
   TrendingDown, TrendingUp, Trophy, UserCheck, Users, X,
 } from "lucide-react";
 import { Badge, Notice } from "@/components/bits";
@@ -17,7 +17,7 @@ import {
 } from "./DashboardCharts";
 import { markValue } from "@/lib/marks";
 import { DashPendingButton } from "./DashPendingButton";
-import { HubRailNav } from "./HubRailNav";
+import { HubRailNav, type HubRailIcon } from "./HubRailNav";
 
 // Performance Hub: left rail, centre analytics, right insights. Server-rendered;
 // forms post to lib/dashboard-actions.ts.
@@ -194,17 +194,16 @@ export function DashHub({ lang, t, r, d, email, children }: {
     );
   }
 
-  type LucideIcon = typeof LayoutDashboard;
-  const nav: [string, string, LucideIcon][] = [
-    [`overview-${r.slaa_id}`, t.dashNavOverview, LayoutDashboard],
+  const nav: { id: string; label: string; icon: HubRailIcon }[] = [
+    { id: `overview-${r.slaa_id}`, label: t.dashNavOverview, icon: "overview" },
   ];
   if (d?.is_athlete) {
-    nav.push([`perf-${r.slaa_id}`, t.dashNavPerformance, Trophy]);
-    nav.push([`coach-${r.slaa_id}`, t.dashNavCoach, UserCheck]);
+    nav.push({ id: `perf-${r.slaa_id}`, label: t.dashNavPerformance, icon: "performance" });
+    nav.push({ id: `coach-${r.slaa_id}`, label: t.dashNavCoach, icon: "coach" });
   }
-  if (d?.is_coach) nav.push([`squad-${r.slaa_id}`, t.dashNavSquad, Users]);
-  if (d) nav.push([`privacy-${r.slaa_id}`, t.dashNavPrivacy, EyeOff]);
-  nav.push([`details-${r.slaa_id}`, t.dashNavDetails, BadgeCheck]);
+  if (d?.is_coach) nav.push({ id: `squad-${r.slaa_id}`, label: t.dashNavSquad, icon: "squad" });
+  if (d) nav.push({ id: `privacy-${r.slaa_id}`, label: t.dashNavPrivacy, icon: "privacy" });
+  nav.push({ id: `details-${r.slaa_id}`, label: t.dashNavDetails, icon: "details" });
 
   const roles = [d?.is_athlete && t.roleAthlete, d?.is_coach && t.roleCoach].filter(Boolean).join(" · ");
   const club = p?.club_name || p?.academic_institution || "—";
@@ -226,7 +225,7 @@ export function DashHub({ lang, t, r, d, email, children }: {
     );
   }
 
-  const infoRows: [LucideIcon, string, string][] = [
+  const infoRows: [typeof BadgeCheck, string, string][] = [
     [BadgeCheck, t.dashVitalId, r.slaa_id],
     [CalendarDays, t.dateOfBirth, p ? formatDate(lang, p.date_of_birth) : "—"],
     [Users, t.dashVitalGender, p ? (p.gender === "F" ? t.genderF : t.genderM) : "—"],
@@ -244,10 +243,7 @@ export function DashHub({ lang, t, r, d, email, children }: {
             <p className="text-sm font-bold text-ink">{t.accountTitle}</p>
           </div>
         </div>
-        <HubRailNav
-          ariaLabel={t.dashJumpTo}
-          items={nav.map(([id, label, Icon]) => ({ id, label, Icon }))}
-        />
+        <HubRailNav ariaLabel={t.dashJumpTo} items={nav} />
         <div className="hub-rail-cta">
           <p className="text-xs font-bold tracking-[0.14em] text-white/70 uppercase">{t.dashFocusCta}</p>
           <p className="mt-2 text-sm font-semibold leading-snug text-white">{focus}</p>
@@ -337,7 +333,7 @@ export function DashHub({ lang, t, r, d, email, children }: {
         )}
 
         <nav className="hub-mobile-nav" aria-label={t.dashJumpTo}>
-          {nav.map(([id, label]) => <a key={id} href={`#${id}`}>{label}</a>)}
+          {nav.map(({ id, label }) => <a key={id} href={`#${id}`}>{label}</a>)}
         </nav>
 
         <div className="flex flex-col gap-8 sm:gap-10">{children}</div>
@@ -348,7 +344,7 @@ export function DashHub({ lang, t, r, d, email, children }: {
           <Search className="size-4 shrink-0 text-muted" aria-hidden />
           <p className="min-w-0 flex-1 truncate text-sm text-muted">{t.dashSearchPlaceholder}</p>
           <div className="flex max-w-[55%] gap-1 overflow-x-auto">
-            {nav.slice(0, 3).map(([id, label]) => (
+            {nav.slice(0, 3).map(({ id, label }) => (
               <a key={id} href={`#${id}`} className="hub-search-chip">{label}</a>
             ))}
           </div>
