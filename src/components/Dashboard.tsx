@@ -192,16 +192,17 @@ export function DashHub({ lang, t, r, d, email, children }: {
     );
   }
 
-  const nav: [string, string, React.ReactNode][] = [
-    [`overview-${r.slaa_id}`, t.dashNavOverview, <LayoutDashboard className="size-4" aria-hidden />],
+  type LucideIcon = typeof LayoutDashboard;
+  const nav: [string, string, LucideIcon][] = [
+    [`overview-${r.slaa_id}`, t.dashNavOverview, LayoutDashboard],
   ];
   if (d?.is_athlete) {
-    nav.push([`perf-${r.slaa_id}`, t.dashNavPerformance, <Trophy className="size-4" aria-hidden />]);
-    nav.push([`coach-${r.slaa_id}`, t.dashNavCoach, <UserCheck className="size-4" aria-hidden />]);
+    nav.push([`perf-${r.slaa_id}`, t.dashNavPerformance, Trophy]);
+    nav.push([`coach-${r.slaa_id}`, t.dashNavCoach, UserCheck]);
   }
-  if (d?.is_coach) nav.push([`squad-${r.slaa_id}`, t.dashNavSquad, <Users className="size-4" aria-hidden />]);
-  if (d) nav.push([`privacy-${r.slaa_id}`, t.dashNavPrivacy, <EyeOff className="size-4" aria-hidden />]);
-  nav.push([`details-${r.slaa_id}`, t.dashNavDetails, <BadgeCheck className="size-4" aria-hidden />]);
+  if (d?.is_coach) nav.push([`squad-${r.slaa_id}`, t.dashNavSquad, Users]);
+  if (d) nav.push([`privacy-${r.slaa_id}`, t.dashNavPrivacy, EyeOff]);
+  nav.push([`details-${r.slaa_id}`, t.dashNavDetails, BadgeCheck]);
 
   const roles = [d?.is_athlete && t.roleAthlete, d?.is_coach && t.roleCoach].filter(Boolean).join(" · ");
   const club = p?.club_name || p?.academic_institution || "—";
@@ -223,12 +224,12 @@ export function DashHub({ lang, t, r, d, email, children }: {
     );
   }
 
-  const infoRows: [React.ReactNode, string, string][] = [
-    [<BadgeCheck className="size-4" aria-hidden />, t.dashVitalId, r.slaa_id],
-    [<CalendarDays className="size-4" aria-hidden />, t.dateOfBirth, p ? formatDate(lang, p.date_of_birth) : "—"],
-    [<Users className="size-4" aria-hidden />, t.dashVitalGender, p ? (p.gender === "F" ? t.genderF : t.genderM) : "—"],
-    [<MapPin className="size-4" aria-hidden />, t.dashVitalDistrict, p ? districtName(lang, p.district) : "—"],
-    [<Trophy className="size-4" aria-hidden />, t.dashVitalClub, club],
+  const infoRows: [LucideIcon, string, string][] = [
+    [BadgeCheck, t.dashVitalId, r.slaa_id],
+    [CalendarDays, t.dateOfBirth, p ? formatDate(lang, p.date_of_birth) : "—"],
+    [Users, t.dashVitalGender, p ? (p.gender === "F" ? t.genderF : t.genderM) : "—"],
+    [MapPin, t.dashVitalDistrict, p ? districtName(lang, p.district) : "—"],
+    [Trophy, t.dashVitalClub, club],
   ];
 
   return (
@@ -242,9 +243,9 @@ export function DashHub({ lang, t, r, d, email, children }: {
           </div>
         </div>
         <nav className="hub-rail-nav">
-          {nav.map(([id, label, icon], i) => (
+          {nav.map(([id, label, Icon], i) => (
             <a key={id} href={`#${id}`} className={`hub-rail-link${i === 0 ? " is-active" : ""}`}>
-              {icon}<span>{label}</span>
+              <Icon className="size-4" aria-hidden /><span>{label}</span>
             </a>
           ))}
         </nav>
@@ -380,9 +381,11 @@ export function DashHub({ lang, t, r, d, email, children }: {
         <div className="hub-side-card">
           <h3 className="hub-side-title">{t.dashPlayerInfo}</h3>
           <ul className="mt-3 flex flex-col gap-3">
-            {infoRows.map(([, label, value], i) => (
+            {infoRows.map(([Icon, label, value]) => (
               <li key={label} className="flex items-start gap-3 text-sm">
-                <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-brand/10 text-brand">{infoRows[i][0]}</span>
+                <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-brand/10 text-brand">
+                  <Icon className="size-4" aria-hidden />
+                </span>
                 <span>
                   <span className="block text-xs text-muted">{label}</span>
                   <strong className="font-semibold break-words">{value}</strong>
