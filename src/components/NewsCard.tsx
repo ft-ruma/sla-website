@@ -111,7 +111,7 @@ export function NewsPhoto({ id, className = "" }: { id: string; className?: stri
     <img
       src={`/api/cms/file/${id}`}
       alt=""
-      className={`block h-auto w-full object-contain ${className}`.trim()}
+      className={`block h-auto max-w-full object-contain ${className}`.trim()}
       loading="lazy"
     />
   );
@@ -120,7 +120,7 @@ export function NewsPhoto({ id, className = "" }: { id: string; className?: stri
 /** Uploaded photo at its own ratio, or the category illustration when none. */
 export function NewsVisual({ item, size = "lg" }: { item: NewsItem; size?: "lg" | "md" | "sm" }) {
   if (!item.image) return <NewsArt category={item.category} size={size} />;
-  return <NewsPhoto id={item.image} />;
+  return <NewsPhoto id={item.image} className="w-full" />;
 }
 
 export function NewsMeta({ item, lang, t }: { item: NewsItem; lang: Lang; t: Dict }) {
@@ -144,15 +144,18 @@ export function NewsCard({ item, lang, t, variant = "card" }: {
   if (variant === "feature") {
     if (item.image) {
       return (
-        <Link href={href} className="group relative block overflow-hidden rounded-3xl bg-night text-white">
-          <NewsPhoto id={item.image} className="transition duration-700 ease-out group-hover:scale-[1.02]" />
-          <div className="absolute inset-0 bg-linear-to-t from-black via-black/45 to-black/10" aria-hidden />
-          <div className="absolute inset-x-0 bottom-0 flex flex-col gap-3 p-6 sm:p-12">
-            <p className="text-xs font-bold tracking-[0.16em] text-white/85 uppercase">{t[`newsCat_${item.category}` as keyof Dict]}</p>
-            <span aria-hidden className="h-px w-16 bg-white/70" />
-            <h3 className="max-w-3xl text-[1.75rem] leading-tight font-extrabold tracking-tight text-balance sm:text-5xl">{item.title[lang]}</h3>
-            <p className="max-w-xl text-base text-white/75 text-pretty sm:text-base">{item.summary[lang]}</p>
-            <span className="mt-1 text-sm font-medium underline decoration-white/50 underline-offset-4 group-hover:decoration-white">{t.readMore}</span>
+        <Link href={href} className="group card card-hover block overflow-hidden">
+          <div className="flex justify-center bg-sand px-3 pt-3 sm:px-5 sm:pt-5">
+            <NewsPhoto
+              id={item.image}
+              className="w-auto max-w-2xl rounded-2xl transition duration-500 ease-out group-hover:scale-[1.01]"
+            />
+          </div>
+          <div className="flex flex-col gap-3 p-5 sm:p-8">
+            <NewsMeta item={item} lang={lang} t={t} />
+            <h3 className="max-w-3xl text-[1.75rem] leading-tight font-extrabold tracking-tight text-balance text-ink sm:text-4xl">{item.title[lang]}</h3>
+            <p className="max-w-2xl text-base text-muted text-pretty">{item.summary[lang]}</p>
+            <span className="mt-1 text-sm font-bold text-accent underline decoration-accent/40 underline-offset-4 group-hover:decoration-accent">{t.readMore}</span>
           </div>
         </Link>
       );
@@ -186,8 +189,11 @@ export function NewsCard({ item, lang, t, variant = "card" }: {
   return (
     <Link href={href} className="group card card-hover flex h-full flex-col p-3">
       {item.image ? (
-        <div className="overflow-hidden rounded-2xl bg-night">
-          <NewsPhoto id={item.image} className="transition duration-700 ease-out group-hover:scale-[1.02]" />
+        <div className="flex min-h-[10rem] items-center justify-center overflow-hidden rounded-2xl bg-sand">
+          <NewsPhoto
+            id={item.image}
+            className="w-auto max-h-64 transition duration-500 ease-out group-hover:scale-[1.02]"
+          />
         </div>
       ) : (
         <div className="relative aspect-[16/10] overflow-hidden rounded-2xl bg-night">

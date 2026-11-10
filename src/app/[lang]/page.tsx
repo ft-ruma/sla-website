@@ -16,7 +16,7 @@ import { formatDateRange } from "@/lib/i18n";
 import { pageLang, pageMeta, type LangParams } from "@/lib/page";
 import { portal } from "@/lib/portal";
 
-export const revalidate = 3600;
+export const revalidate = 300;
 
 export async function generateMetadata({ params }: LangParams) {
   const { lang, t } = await pageLang(params);
