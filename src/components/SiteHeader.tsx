@@ -4,8 +4,8 @@ import Link from "next/link";
 import type { Dict } from "@/lib/dict/en";
 import type { Lang } from "@/lib/langs";
 import { portal } from "@/lib/portal";
-import { LanguageLinks, MegaNav, MenuPanel } from "./HeaderParts";
-import { fullNav, megaNav } from "./nav";
+import { LanguageLinks, MegaNav } from "./HeaderParts";
+import { megaNav } from "./nav";
 
 export function SiteHeader({ lang, t, notice }: { lang: Lang; t: Dict; notice?: string }) {
   const mega = megaNav(lang, t);
@@ -38,7 +38,8 @@ export function SiteHeader({ lang, t, notice }: { lang: Lang; t: Dict; notice?: 
               <LanguageLinks lang={lang} label={t.language} />
             </div>
             <Link href={`/${lang}/sign-in`}
-              className="tap site-header-ghost hidden items-center gap-1.5 md:inline-flex">
+              className="tap site-header-ghost inline-flex items-center gap-1.5 max-md:px-2.5"
+              aria-label={t.signIn}>
               <LogIn className="size-4" aria-hidden />
               <span className="hidden lg:inline">{t.signIn}</span>
             </Link>
@@ -46,23 +47,6 @@ export function SiteHeader({ lang, t, notice }: { lang: Lang; t: Dict; notice?: 
               className="tap site-header-cta max-md:px-3 max-md:text-[0.78rem]">
               {t.register}
             </a>
-            <MenuPanel
-              groups={fullNav(lang, t)}
-              menu={t.menu}
-              close={t.close}
-              siteName={t.siteName}
-              siteTagline={t.siteTagline}
-              languageLabel={t.language}
-              lang={lang}
-              signInHref={`/${lang}/sign-in`}
-              signInLabel={t.signIn}
-              registerHref={portal.home(lang)}
-              registerLabel={t.register}
-              athleteHref={portal.athlete(lang)}
-              athleteLabel={t.registerAthlete}
-              coachHref={portal.coach(lang)}
-              coachLabel={t.registerCoach}
-            />
           </div>
         </div>
       </div>
