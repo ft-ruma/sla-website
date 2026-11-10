@@ -21,9 +21,18 @@ const LABELS: Record<NavKey, keyof Dict> = {
 
 const item = (lang: Lang, t: Dict, key: NavKey): NavItem => ({ key, href: `/${lang}${PATHS[key]}`, label: t[LABELS[key]] });
 
-/** The main bar on wide screens. */
-export function mainNav(lang: Lang, t: Dict): NavItem[] {
-  return (["news", "calendar", "results", "rankings", "athletes", "clubs"] as const).map((k) => item(lang, t, k));
+/** Desktop mega menu: News as a top link, then the three grouped sections. */
+export function megaNav(lang: Lang, t: Dict): { news: NavItem; groups: NavGroup[] } {
+  const group = (title: string, keys: NavKey[]) => ({ title, items: keys.map((k) => item(lang, t, k)) });
+  return {
+    news: item(lang, t, "news"),
+    groups: [
+      group(t.navCompete, ["calendar", "results", "rankings", "records"]),
+      group(t.navCommunity, ["athletes", "clubs", "coaches", "development"]),
+      // News sits as its own top-level link, so it is not repeated here.
+      group(t.navOrganisation, ["about", "antiDoping", "downloads"]),
+    ],
+  };
 }
 
 /** Everything, grouped, for the menu panel and the footer. */

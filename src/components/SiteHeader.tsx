@@ -4,10 +4,11 @@ import Link from "next/link";
 import type { Dict } from "@/lib/dict/en";
 import type { Lang } from "@/lib/langs";
 import { portal } from "@/lib/portal";
-import { LanguageLinks, MainNav, MenuPanel } from "./HeaderParts";
-import { fullNav, mainNav } from "./nav";
+import { LanguageLinks, MegaNav, MenuPanel } from "./HeaderParts";
+import { fullNav, megaNav } from "./nav";
 
 export function SiteHeader({ lang, t, notice }: { lang: Lang; t: Dict; notice?: string }) {
+  const mega = megaNav(lang, t);
   return (
     <header className="site-header no-print sticky top-0 z-40">
       {notice && (
@@ -30,7 +31,7 @@ export function SiteHeader({ lang, t, notice }: { lang: Lang; t: Dict; notice?: 
             </span>
           </Link>
 
-          <MainNav items={mainNav(lang, t)} label={t.menu} />
+          <MegaNav news={mega.news} groups={mega.groups} label={t.menu} />
 
           <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
             <div className="hidden sm:block">
@@ -48,7 +49,6 @@ export function SiteHeader({ lang, t, notice }: { lang: Lang; t: Dict; notice?: 
             <MenuPanel
               groups={fullNav(lang, t)}
               menu={t.menu}
-              more={t.navMore}
               close={t.close}
               siteName={t.siteName}
               siteTagline={t.siteTagline}
