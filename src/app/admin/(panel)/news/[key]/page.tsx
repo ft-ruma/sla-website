@@ -65,12 +65,12 @@ export default async function EditNews({ params, searchParams }: {
           {n?.image ? (
             <div className="flex flex-wrap items-center gap-4">
               {/* eslint-disable-next-line @next/next/no-img-element -- preview of an uploaded file */}
-              <img src={`/api/cms/file/${n.image}`} alt="" className="h-28 w-48 rounded-xl object-cover ring-1 ring-black/10" />
+              <img src={`/api/cms/file/${n.image}`} alt="" className="max-h-48 w-auto max-w-full rounded-xl object-contain ring-1 ring-black/10" />
               <Toggle name="removeImage" label="Remove the photo" hint="The category illustration is shown instead." />
             </div>
           ) : <p className="text-sm text-muted">No photo: the website shows the category illustration.</p>}
           <label className={LABEL}>
-            {n?.image ? "Replace with" : "Upload"} (JPG, PNG or WebP, up to 5 MB; landscape works best)
+            {n?.image ? "Replace with" : "Upload"} (JPG, PNG or WebP, up to 5 MB; shown at the photo&apos;s own ratio)
             <input type="file" name="image" accept="image/jpeg,image/png,image/webp" className="text-sm" />
           </label>
         </Section>

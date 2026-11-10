@@ -35,8 +35,8 @@ export default async function Article({ params }: Params) {
       <Container className="py-12">
         <article className="max-w-2xl">
           {item.image && (
-            // eslint-disable-next-line @next/next/no-img-element -- served from the CMS, sizes vary
-            <img src={`/api/cms/file/${item.image}`} alt="" className="mb-8 aspect-[16/9] w-full rounded-3xl object-cover" />
+            // eslint-disable-next-line @next/next/no-img-element -- served from the CMS; keep the file's own ratio
+            <img src={`/api/cms/file/${item.image}`} alt="" className="mb-8 h-auto w-full rounded-3xl object-contain" />
           )}
           {first && <p className="mb-6 text-xl leading-relaxed text-ink/90">{first}</p>}
           {rest.map((p, i) => <p key={i} className="mb-5 text-lg leading-relaxed text-ink/85">{p}</p>)}
