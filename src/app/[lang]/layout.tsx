@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Barlow_Condensed, Inter, Noto_Sans_Sinhala, Noto_Sans_Tamil } from "next/font/google";
 import { SiteFooter } from "@/components/SiteFooter";
+import { SmoothScroll } from "@/components/ScrollFx";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getSettings } from "@/lib/cms";
 import { langParams, pageLang, type LangParams } from "@/lib/page";
@@ -34,6 +35,7 @@ export default async function LangLayout({ children, params }: LangParams & { ch
         <SiteHeader lang={lang} t={t} notice={(await getSettings()).sampleNotice ? t.sampleNotice : undefined} />
         <main id="main" className="flex flex-1 flex-col">{children}</main>
         <SiteFooter lang={lang} t={t} />
+        <SmoothScroll />
       </body>
     </html>
   );

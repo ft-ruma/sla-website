@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowLink } from "@/components/bits";
 import { CompetitionCard } from "@/components/CompetitionCard";
 import { CountUp } from "@/components/CountUp";
+import { ScrollRail } from "@/components/ScrollFx";
 import { NavIcon } from "@/components/NavIcon";
 import { NewsCard } from "@/components/NewsCard";
 import { Container } from "@/components/PageHero";
@@ -32,6 +33,18 @@ const NAV_LABEL: Record<string, string> = {
   calendar: "navCalendar", results: "navResults", rankings: "navRankings", records: "navRecords",
   athletes: "navAthletes", clubs: "navClubs",
 };
+
+/** "01 / EXPLORE": a thin bar that pins under the header while its section is on screen. */
+function SectionBar({ n, title, side, dark = false }: { n: string; title: string; side?: string; dark?: boolean }) {
+  return (
+    <div aria-hidden className={`section-bar ${dark ? "is-dark" : ""}`}>
+      <div className="section-bar-inner">
+        <span><span className="section-bar-n">{n}</span><span className="section-bar-sep">/</span>{title}</span>
+        {side && <span className="section-bar-side">{side}</span>}
+      </div>
+    </div>
+  );
+}
 
 /** Oversized section title with a running number, e.g. "01  LATEST NEWS". */
 function BigTitle({ n, title, action, tone = "light", compact = false }: { n: string; title: string; action?: React.ReactNode; tone?: "light" | "dark"; compact?: boolean }) {
@@ -185,7 +198,9 @@ export default async function Home({ params }: LangParams) {
       </Container>
 
       {/* Explore: numbered tiles that flip to black on hover */}
-      <Container className="pb-14 sm:pb-20">
+      <section id="explore" className="scroll-mt-[var(--header-h)]">
+      <SectionBar n="01" title={t.exploreSite} side={t.siteName} />
+      <Container className="pt-8 pb-14 sm:pb-20 lg:pt-12">
         <BigTitle n="01" title={t.exploreSite} />
         <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
           {QUICK.map(([key, path], i) => (
@@ -208,8 +223,12 @@ export default async function Home({ params }: LangParams) {
         </ul>
       </Container>
 
+      </section>
+
       {/* News: one lead story and three more */}
-      <Container className="pb-14 sm:pb-20">
+      <section id="news" className="scroll-mt-[var(--header-h)]">
+      <SectionBar n="02" title={t.latestNews} side={t.siteName} />
+      <Container className="pt-8 pb-14 sm:pb-20 lg:pt-12">
         <BigTitle n="02" title={t.latestNews} action={<ArrowLink href={`/${lang}/news`}>{t.allNews}</ArrowLink>} />
         {lead && <div className="reveal"><NewsCard item={lead} lang={lang} t={t} variant="feature" /></div>}
         {/* Phones: a swipeable row of cards (with the next one peeking in) instead of a long stack. */}
@@ -223,8 +242,12 @@ export default async function Home({ params }: LangParams) {
         </div>
       </Container>
 
+      </section>
+
       {/* Get involved: a dark stage with three bold doors */}
-      <section className="grain relative overflow-hidden bg-night py-14 text-white sm:py-20">
+      <section id="involved" className="scroll-mt-[var(--header-h)] bg-night">
+      <SectionBar n="03" title={t.getInvolved} side={t.siteName} dark />
+      <div className="grain relative overflow-hidden bg-night py-14 text-white sm:py-20">
         <div aria-hidden className="absolute inset-0 bg-[radial-gradient(40rem_24rem_at_100%_0%,rgb(232_93_4/0.25),transparent_60%),radial-gradient(40rem_24rem_at_0%_100%,rgb(6_7_248/0.3),transparent_60%)]" />
         <p aria-hidden className="display text-outline pointer-events-none absolute -top-4 left-0 text-[5rem] leading-none whitespace-nowrap select-none sm:text-[8rem]">{t.getInvolved}</p>
         <Container className="relative">
@@ -254,10 +277,14 @@ export default async function Home({ params }: LangParams) {
             </Link>
           </div>
         </Container>
+      </div>
+
       </section>
 
       {/* Season leaders: big marks, the best one on black */}
-      <Container className="py-14 sm:py-20">
+      <section id="leaders" className="scroll-mt-[var(--header-h)]">
+      <SectionBar n="04" title={t.seasonLeaders} side={t.siteName} />
+      <Container className="pt-8 pb-14 sm:pb-20 lg:pt-12">
         <BigTitle n="04" title={t.seasonLeaders} action={<ArrowLink href={`/${lang}/rankings`}>{t.allRankings}</ArrowLink>} />
         <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
           {leaders.map((r, i) => {
@@ -286,8 +313,12 @@ export default async function Home({ params }: LangParams) {
         </ul>
       </Container>
 
+      </section>
+
       {/* Next competitions beside the national records board */}
-      <Container className="grid gap-12 pb-14 sm:pb-20 lg:grid-cols-[1.25fr_1fr]">
+      <section id="meets" className="scroll-mt-[var(--header-h)]">
+      <SectionBar n="05" title={t.nextMeets} side={t.siteName} />
+      <Container className="grid gap-12 pt-8 pb-14 sm:pb-20 lg:grid-cols-[1.25fr_1fr] lg:pt-12">
         <div>
           <BigTitle n="05" compact title={t.nextMeets} action={<ArrowLink href={`/${lang}/calendar`}>{t.fullCalendar}</ArrowLink>} />
           {upcoming.length ? upcoming.slice(0, 4).map((c) => (
@@ -311,6 +342,15 @@ export default async function Home({ params }: LangParams) {
           <ArrowLink href={`/${lang}/records`} tone="dark" className="relative mt-4">{t.allRecords}</ArrowLink>
         </div>
       </Container>
+      </section>
+
+      <ScrollRail label={t.quickLinks} sections={[
+        { id: "explore", n: "01", label: t.exploreSite },
+        { id: "news", n: "02", label: t.latestNews },
+        { id: "involved", n: "03", label: t.getInvolved },
+        { id: "leaders", n: "04", label: t.seasonLeaders },
+        { id: "meets", n: "05", label: t.nextMeets },
+      ]} />
     </>
   );
 }

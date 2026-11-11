@@ -23,7 +23,7 @@
   color-scheme: light;
   --header-h: 4.5rem;
 }
-header:has(.sample-notice) {
+:root:has(.sample-notice) {
   --header-h: 6.75rem;
 }
 
@@ -292,15 +292,19 @@ header:has(.sample-notice) {
     (long Tamil words, wide SVGs, tables). Keep the layout locked to the
     device width so text and images stay readable.
   */
+  /* clip (not hidden): hidden would turn html/body into their own scroll
+     boxes, and then the sticky header and section bars could not pin. */
   html {
     width: 100%;
     overflow-x: hidden;
+    overflow-x: clip;
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
   }
   body {
     width: 100%;
     overflow-x: hidden;
+    overflow-x: clip;
     overflow-wrap: anywhere;
     word-break: break-word;
     position: relative;
@@ -1000,7 +1004,7 @@ html:lang(si) :is(h1, h2, h3), html:lang(ta) :is(h1, h2, h3) { line-height: 1.35
     --text-4xl: 2.15rem;
     --text-5xl: 2.45rem;
   }
-  header:has(.sample-notice) {
+  :root:has(.sample-notice) {
     --header-h: 8.2rem;
   }
 
@@ -1049,7 +1053,7 @@ html:lang(si) :is(h1, h2, h3), html:lang(ta) :is(h1, h2, h3) { line-height: 1.35
     --text-4xl: 2.25rem;
     --text-5xl: 2.65rem;
   }
-  header:has(.sample-notice) {
+  :root:has(.sample-notice) {
     --header-h: 9.4rem;
   }
 }
@@ -1088,6 +1092,7 @@ html:lang(si) :is(h1, h2, h3), html:lang(ta) :is(h1, h2, h3) { line-height: 1.35
   line-height: 0.92;
   letter-spacing: -0.01em;
   overflow-wrap: normal; /* never split a headline word in two */
+  word-break: normal;
 }
 html:lang(en) .display {
   font-style: italic;
@@ -1200,4 +1205,132 @@ html:lang(si) .display, html:lang(ta) .display {
 @media (prefers-reduced-motion: reduce) {
   .streaks span, .marquee-track { animation: none; }
   .glow:hover { transform: none; }
+}
+
+/* ═══ Scroll experience ══════════════════════════════════════════════
+   Lenis smooth scrolling, numbered section bars that pin under the header,
+   and (wide screens) a section index with a progress ruler on the right. */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: clip; }
+.lenis.lenis-smooth iframe { pointer-events: none; }
+
+/* "01 / EXPLORE": pins under the header while its section is on screen,
+   then the next section's bar pushes it away. Desktop only: on phones and
+   tablets the two-row header already takes enough room. */
+.section-bar {
+  display: none;
+  position: sticky;
+  top: var(--header-h);
+  z-index: 20;
+  border-block: 1px solid rgb(17 17 17 / 0.07);
+  background: rgb(255 255 255 / 0.72);
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+}
+.section-bar.is-dark {
+  border-color: rgb(255 255 255 / 0.1);
+  background: rgb(17 17 17 / 0.6);
+  color: white;
+}
+@media (min-width: 1024px) { .section-bar { display: block; } }
+.section-bar-inner {
+  margin: 0 auto;
+  display: flex;
+  max-width: 72rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 1.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.section-bar-n { color: var(--color-accent); }
+.section-bar-sep { margin: 0 0.6rem; opacity: 0.35; }
+.section-bar-side { opacity: 0.45; }
+
+/* Right-hand section index and progress ruler (wide screens). White with
+   "difference" blending reads dark on light sections and light on dark ones. */
+.scroll-index, .scroll-ruler { display: none; }
+/* The index needs a clear margin beside the content: 1536px and wider. */
+@media (min-width: 1536px) {
+  .scroll-index { display: block; }
+}
+@media (min-width: 1440px) {
+  .scroll-index {
+    position: fixed;
+    right: 2.6rem;
+    bottom: 2.25rem;
+    z-index: 35;
+    /* the free margin beside the 72rem content column, minus the ruler */
+    max-width: max(7rem, calc((100vw - 72rem) / 2 - 3.5rem));
+    color: white;
+    mix-blend-mode: difference;
+  }
+  .scroll-index ol { display: flex; flex-direction: column; align-items: flex-end; gap: 0.15rem; }
+  .scroll-index a {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-end;
+    gap: 0.35rem;
+    text-align: right;
+    font-family: var(--font-display);
+    font-weight: 800;
+    line-height: 1.05;
+    text-transform: uppercase;
+    overflow-wrap: normal;
+    word-break: normal;
+    transition: opacity 0.35s ease, font-size 0.35s ease, margin 0.35s ease;
+  }
+  html:lang(en) .scroll-index a { font-style: italic; }
+  .scroll-index a.is-past { font-size: 0.82rem; opacity: 0.38; }
+  .scroll-index a.is-next { font-size: 0.82rem; opacity: 0.62; }
+  .scroll-index a.is-active { font-size: 1.2rem; opacity: 1; margin-block: 0.3rem; }
+  .scroll-index a:hover { opacity: 1; }
+  .scroll-index-n { flex: none; white-space: nowrap; font-size: 0.62rem; letter-spacing: 0.08em; opacity: 0.7; }
+
+  .scroll-ruler {
+    display: block;
+    position: fixed;
+    top: calc(var(--header-h) + 1.25rem);
+    bottom: 1.25rem;
+    right: 0.6rem;
+    z-index: 35;
+    width: 1.4rem;
+    color: white;
+    mix-blend-mode: difference;
+    pointer-events: none;
+  }
+  .scroll-ruler-ticks {
+    position: absolute;
+    inset: 0 0 0 auto;
+    width: 0.55rem;
+    opacity: 0.4;
+    background: repeating-linear-gradient(to bottom, currentColor 0 1px, transparent 1px 2.4rem);
+  }
+  .scroll-ruler-mark {
+    position: absolute;
+    right: 0;
+    width: 1.4rem;
+    height: 2px;
+    background: currentColor;
+    transition: top 0.12s linear;
+  }
+  .scroll-ruler-pct {
+    position: absolute;
+    right: 0;
+    top: 0.3rem;
+    font-family: var(--font-barlow), var(--font-inter), sans-serif;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scroll-index a, .scroll-ruler-mark { transition: none; }
 }

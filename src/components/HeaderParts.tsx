@@ -141,6 +141,7 @@ export function MegaNav({
       <div
         id={panelId}
         hidden={!open}
+        data-lenis-prevent
         className="site-mega-panel"
         onMouseEnter={clearClose}
       >
