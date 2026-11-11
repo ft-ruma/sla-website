@@ -1,9 +1,10 @@
 "use client";
 
-import { ChevronDown, ChevronRight, Newspaper } from "lucide-react";
+import { ChevronDown, ChevronRight, LogIn, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { LANG_COOKIE, LANG_NAMES, LANGS, type Lang } from "@/lib/langs";
 import { NavIcon } from "./NavIcon";
 import type { NavGroup, NavItem } from "./nav";
@@ -99,7 +100,6 @@ export function MegaNav({
             setFocusGroup(null);
           }}
         >
-          <Newspaper className="size-4 shrink-0 opacity-80" aria-hidden />
           <span className="site-main-link-label">{news.label}</span>
         </Link>
 
@@ -212,5 +212,83 @@ export function LanguageLinks({ lang, label, tone = "bar" }: { lang: Lang; label
         </Link>
       ))}
     </nav>
+  );
+}
+
+/**
+ * Phones and tablets: a Menu button that opens a full-screen panel with every
+ * section (grouped), the language switch, sign-in and Register.
+ */
+export function MobileMenu({ news, groups, labels, lang, signInHref, registerHref }: {
+  news: NavItem;
+  groups: NavGroup[];
+  labels: { menu: string; close: string; language: string; signIn: string; register: string };
+  lang: Lang;
+  signInHref: string;
+  registerHref: string;
+}) {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const panelId = useId();
+
+  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => { setOpen(false); }, [pathname]);
+  useEffect(() => {
+    if (!open) return;
+    // keep the page behind the panel still
+    const html = document.documentElement;
+    const before = html.style.overflow;
+    html.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => { html.style.overflow = before; window.removeEventListener("keydown", onKey); };
+  }, [open]);
+
+  const all: NavGroup[] = [{ title: "", items: [news] }, ...groups];
+  return (
+    <>
+      <button type="button" className="site-menu-btn" aria-expanded={open} aria-controls={panelId}
+        onClick={() => setOpen((o) => !o)}>
+        {open ? <X className="size-5" aria-hidden /> : <Menu className="size-5" aria-hidden />}
+        <span className="max-sm:sr-only">{open ? labels.close : labels.menu}</span>
+      </button>
+      {/* rendered at page level: the header's backdrop blur would otherwise
+          trap this fixed panel inside the header box */}
+      {mounted && createPortal(
+      <div id={panelId} hidden={!open} className="site-menu-panel" data-lenis-prevent>
+        <nav aria-label={labels.menu} className="mx-auto flex max-w-2xl flex-col gap-6 px-4 pt-5 pb-10 sm:px-6">
+          {all.map((g, gi) => (
+            <section key={gi}>
+              {g.title && <p className="site-menu-group-title">{g.title}</p>}
+              <ul className="grid gap-1 sm:grid-cols-2">
+                {g.items.map((i) => (
+                  <li key={i.href}>
+                    <Link href={i.href} aria-current={isActive(pathname, i.href) ? "page" : undefined}
+                      className="site-menu-link" onClick={() => setOpen(false)}>
+                      <span className="site-menu-icon"><NavIcon name={i.key} className="size-5" /></span>
+                      <span className="min-w-0 flex-1">{i.label}</span>
+                      <ChevronRight className="size-4 shrink-0 opacity-35" aria-hidden />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+          <div className="flex flex-col gap-4 border-t border-line pt-6">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm font-semibold text-muted">{labels.language}</span>
+              <LanguageLinks lang={lang} label={labels.language} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Link href={signInHref} className="btn btn-ghost" onClick={() => setOpen(false)}>
+                <LogIn className="size-4" aria-hidden /> {labels.signIn}
+              </Link>
+              <a href={registerHref} className="btn btn-primary">{labels.register}</a>
+            </div>
+          </div>
+        </nav>
+      </div>, document.body)}
+    </>
   );
 }
