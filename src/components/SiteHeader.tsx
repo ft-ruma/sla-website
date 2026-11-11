@@ -38,7 +38,7 @@ export function SiteHeader({ lang, t, notice }: { lang: Lang; t: Dict; notice?: 
               <LanguageLinks lang={lang} label={t.language} />
             </div>
             <Link href={`/${lang}/sign-in`}
-              className="tap site-header-ghost inline-flex items-center gap-1.5 max-md:px-2.5"
+              className="tap site-header-ghost gap-1.5 max-md:px-2.5"
               aria-label={t.signIn}>
               <LogIn className="size-4" aria-hidden />
               <span className="hidden lg:inline">{t.signIn}</span>
