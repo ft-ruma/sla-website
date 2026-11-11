@@ -49,17 +49,13 @@ export function SiteFooter({ lang, t }: { lang: Lang; t: Dict }) {
             href="https://www.ascendit.dev"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2.5 text-xs text-white/55 transition hover:text-white/80"
+            aria-label={`${t.footerBuiltBy} ${t.footerAscendIt}`}
+            className="inline-flex items-center gap-2.5 text-xs text-white/55 transition hover:text-white"
           >
             <span className="font-medium tracking-wide">{t.footerBuiltBy}</span>
-            <span className="inline-flex items-center rounded-md bg-white px-2 py-1 shadow-sm ring-1 ring-white/20">
-              <Image
-                src="/brand/ascendit-logo.jpg"
-                alt={t.footerAscendIt}
-                width={120}
-                height={28}
-                className="h-6 w-auto object-contain object-center"
-              />
+            <span className="inline-flex items-baseline gap-1 text-[0.95rem] leading-none text-white">
+              <span className="font-serif font-bold tracking-tight">ascend</span>
+              <span className="text-[0.72em] font-sans font-bold tracking-[0.04em]">IT</span>
             </span>
           </a>
           <a
