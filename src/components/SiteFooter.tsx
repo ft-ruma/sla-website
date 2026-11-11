@@ -38,7 +38,7 @@ export function SiteFooter({ lang, t }: { lang: Lang; t: Dict }) {
       </div>
       {/* Giant wordmark across the bottom of every page */}
       <div aria-hidden className="mx-auto max-w-6xl overflow-hidden px-4 sm:px-6">
-        <p className="display text-fire pb-4 text-[3.4rem] leading-[0.85] [overflow-wrap:anywhere] select-none sm:text-[6.5rem] lg:text-[8.6rem]">{t.siteName}</p>
+        <p className="display text-fire pb-4 text-[2.5rem] leading-[0.85] [overflow-wrap:anywhere] select-none sm:text-6xl lg:text-[5.5rem]">{t.siteName}</p>
       </div>
       <div className="border-t border-white/10">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-5 text-xs text-white/45 sm:px-6 md:flex-row md:items-center md:justify-between">

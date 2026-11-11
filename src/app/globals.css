@@ -986,7 +986,7 @@ html:lang(si) :is(h1, h2, h3), html:lang(ta) :is(h1, h2, h3) { line-height: 1.35
 /* ─── Phone layout (< 640px): dedicated larger scale ──────────────── */
 @media (max-width: 639.98px) {
   html {
-    font-size: 19px !important; /* !important beats html:lang SI/TA rules */
+    font-size: 17.5px !important; /* !important beats html:lang SI/TA rules */
   }
   :root {
     --header-h: 6.4rem;
@@ -1035,7 +1035,7 @@ html:lang(si) :is(h1, h2, h3), html:lang(ta) :is(h1, h2, h3) { line-height: 1.35
 /* ─── Tablet layout (640–1023px) ─────────────────────────────────── */
 @media (min-width: 640px) and (max-width: 1023.98px) {
   html {
-    font-size: 18.5px !important;
+    font-size: 17px !important;
   }
   :root {
     --header-h: 7.4rem;
