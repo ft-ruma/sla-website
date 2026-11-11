@@ -48,3 +48,15 @@ export function Notice({ children }: { children: React.ReactNode }) {
 export function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return <div className={`card ${className}`}>{children}</div>;
 }
+
+/** A friendly "nothing here yet" panel: an icon on a soft disc and one line of text. */
+export function EmptyState({ icon: Icon, children }: { icon: React.ComponentType<{ className?: string }>; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-line bg-sand/60 px-6 py-10 text-center">
+      <span className="grid size-14 place-items-center rounded-full bg-white text-accent shadow-sm ring-1 ring-line">
+        <Icon className="size-6" />
+      </span>
+      <p className="max-w-sm text-muted text-pretty">{children}</p>
+    </div>
+  );
+}

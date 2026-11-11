@@ -1,4 +1,4 @@
-import { MapPin } from "lucide-react";
+import { ArrowRight, MapPin } from "lucide-react";
 import Link from "next/link";
 import type { Competition, CompetitionCategory } from "@/content/types";
 import { entriesOpen, statusOf } from "@/lib/competitions";
@@ -52,6 +52,9 @@ export function CompetitionCard({ c, lang, t }: { c: Competition; lang: Lang; t:
           </p>
         )}
       </div>
+      <span aria-hidden className="hidden size-11 shrink-0 place-items-center self-center rounded-full bg-sand text-ink transition group-hover:bg-accent group-hover:text-white sm:grid">
+        <ArrowRight className="size-5 transition group-hover:translate-x-0.5" />
+      </span>
     </Link>
   );
 }

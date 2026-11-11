@@ -146,10 +146,11 @@ export default async function Home({ params }: LangParams) {
           <ArrowLink href={`/${lang}/news`}>{t.allNews}</ArrowLink>
         </div>
         {lead && <NewsCard item={lead} lang={lang} t={t} variant="feature" />}
-        <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {/* Phones: a swipeable row of cards (with the next one peeking in) instead of a long stack. */}
+        <div className="no-scrollbar -mx-4 mt-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:snap-none sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3">
           {rest.slice(0, 3).map((n, i) => (
             // two columns on tablets show two cards, so the third would sit alone: show it on phones and desktops only
-            <div key={n.slug} className={i === 2 ? "sm:max-lg:hidden" : undefined}>
+            <div key={n.slug} className={`w-[82%] shrink-0 snap-start sm:w-auto ${i === 2 ? "sm:max-lg:hidden" : ""}`}>
               <NewsCard item={n} lang={lang} t={t} variant="card" />
             </div>
           ))}
@@ -196,7 +197,7 @@ export default async function Home({ params }: LangParams) {
         </div>
         <div>
           <SectionHeading title={t.seasonLeaders} intro={t.leadersIntro} action={<ArrowLink href={`/${lang}/rankings`}>{t.allRankings}</ArrowLink>} />
-          <ul className="grid gap-3 sm:grid-cols-2">
+          <ul className="grid grid-cols-2 gap-3">
             {leaders.map((r) => {
               const top = r.rows[0];
               return (
@@ -209,7 +210,7 @@ export default async function Home({ params }: LangParams) {
                       </span>
                       <Medal className="size-4 text-amber-500" aria-hidden />
                     </span>
-                    <span className="text-3xl font-extrabold tracking-tight tabular">{formatMark(r.event, top.mark)}</span>
+                    <span className="text-2xl font-extrabold tracking-tight tabular sm:text-3xl">{formatMark(r.event, top.mark)}</span>
                     <span className="truncate text-sm font-semibold">{top.athlete}</span>
                   </Link>
                 </li>

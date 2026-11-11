@@ -27,6 +27,9 @@ export function MegaNav({
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [open, setOpen] = useState(false);
   const [focusGroup, setFocusGroup] = useState<string | null>(null);
+  // How the last press happened: a mouse has already opened the panel by hovering,
+  // so its click should not close it again; a tap or a key press toggles it.
+  const lastPointer = useRef("");
 
   const clearClose = () => {
     if (closeTimer.current) {
@@ -114,15 +117,18 @@ export function MegaNav({
                 className={`site-main-link site-mega-trigger ${active ? "is-active" : ""} ${highlighted ? "is-open" : ""}`}
                 aria-expanded={open}
                 aria-controls={panelId}
+                onPointerDown={(e) => { lastPointer.current = e.pointerType; }}
                 onClick={() => {
+                  const viaMouse = lastPointer.current === "mouse";
+                  lastPointer.current = "";
                   if (open && focusGroup === g.title) {
+                    if (viaMouse) return;
                     setOpen(false);
                     setFocusGroup(null);
                   } else {
                     openPanel(g.title);
                   }
                 }}
-                onFocus={() => openPanel(g.title)}
               >
                 <span className="site-main-link-label">{g.title}</span>
                 <ChevronDown className={`size-3.5 shrink-0 opacity-55 transition-transform duration-200 ${open ? "rotate-180" : ""}`} aria-hidden />

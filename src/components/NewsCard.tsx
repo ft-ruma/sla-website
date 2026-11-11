@@ -153,7 +153,7 @@ export function NewsCard({ item, lang, t, variant = "card" }: {
           <NewsVisual item={item} size="lg" />
         </span>
         <div className="absolute inset-0 bg-linear-to-t from-black via-black/45 to-black/10" aria-hidden />
-        <div className="relative flex flex-col gap-3 p-6 sm:p-10 lg:p-12">
+        <div className="relative flex flex-col gap-3 p-6 pt-28 sm:p-10 sm:pt-32 lg:p-12 lg:pt-32">
           <p className="text-xs font-bold tracking-[0.16em] text-white/85 uppercase">{t[`newsCat_${item.category}` as keyof Dict]}</p>
           <span aria-hidden className="h-px w-16 bg-white/70" />
           <h3 className="max-w-3xl text-[1.75rem] leading-tight font-extrabold tracking-tight text-balance sm:text-4xl lg:text-5xl">{item.title[lang]}</h3>

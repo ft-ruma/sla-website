@@ -12,7 +12,7 @@ export function SiteHeader({ lang, t, notice }: { lang: Lang; t: Dict; notice?: 
   return (
     <header className="site-header no-print sticky top-0 z-40">
       {notice && (
-        <p className="sample-notice line-clamp-2 bg-[#fff4d6] px-3 py-1.5 text-center text-[0.8rem] leading-snug text-ink sm:truncate sm:text-sm">
+        <p className="sample-notice truncate bg-[#fff4d6] px-3 py-1.5 text-center text-xs leading-snug text-ink sm:text-sm">
           {notice}
         </p>
       )}
@@ -20,9 +20,9 @@ export function SiteHeader({ lang, t, notice }: { lang: Lang; t: Dict; notice?: 
         {t.skipToContent}
       </a>
       <div className="site-header-bar">
-        <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-3 sm:h-[4.5rem] sm:gap-3 sm:px-6">
-          <Link href={`/${lang}`} className="site-brand flex min-w-0 shrink-0 items-center gap-2.5 sm:gap-3">
-            <span className="site-brand-mark">
+        <div className="site-header-row mx-auto flex max-w-6xl flex-wrap items-center gap-x-2 px-3 sm:gap-x-3 sm:px-6 lg:h-[4.5rem] lg:flex-nowrap">
+          <Link href={`/${lang}`} className="site-brand flex h-14 min-w-0 flex-1 basis-0 items-center gap-2.5 sm:gap-3 sm:h-16 lg:h-auto lg:flex-none lg:basis-auto lg:shrink-0">
+            <span className="site-brand-mark shrink-0">
               <Image src="/brand/sla-logo.png" alt="" width={48} height={48} priority className="size-9 sm:size-11" />
             </span>
             <span className="flex min-w-0 flex-col leading-none">

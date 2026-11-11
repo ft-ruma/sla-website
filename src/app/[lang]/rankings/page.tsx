@@ -1,7 +1,7 @@
-import { BadgeCheck, ClipboardCheck, Info, UserRound } from "lucide-react";
+import { BadgeCheck, ClipboardCheck, Info, Medal, UserRound } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Card, Notice } from "@/components/bits";
+import { Card, EmptyState, Notice } from "@/components/bits";
 import { Container, PageHero } from "@/components/PageHero";
 import { ResultTable } from "@/components/ResultTable";
 import { getRankings } from "@/lib/cms";
@@ -172,7 +172,7 @@ async function AthleteTable({ lang, t, event, label, gender, href }: {
             </tbody>
           </table>
         </div>
-      ) : <p className="text-muted">{t.rankNone}</p>}
+      ) : <EmptyState icon={Medal}>{t.rankNone}</EmptyState>}
       <p className="mt-5 flex gap-2 text-xs text-muted"><Info className="size-4 shrink-0" aria-hidden /> {t.rankRegisterNote}</p>
     </Card>
   );
@@ -225,7 +225,7 @@ async function CoachTable({ lang, t, event, label }: { lang: Lang; t: Dict; even
             </tbody>
           </table>
         </div>
-      ) : <p className="text-muted">{t.rankCoachNone}</p>}
+      ) : <EmptyState icon={Medal}>{t.rankCoachNone}</EmptyState>}
       <p className="mt-5 flex gap-2 text-xs text-muted"><Info className="size-4 shrink-0" aria-hidden /> {t.rankCoachNote}</p>
     </Card>
   );
@@ -264,7 +264,7 @@ async function SeasonOnly({ lang, t, q }: { lang: Lang; t: Dict; q: { event?: st
               {rows.length ? (
                 <ResultTable event={event} rows={rows} t={t}
                   extra={{ heading: `${t.competition} · ${t.date}`, cell: (i) => `${rows[i].competition} · ${formatDate(lang, rows[i].date, { day: "numeric", month: "short" })}` }} />
-              ) : <p className="text-muted">{t.noRanking}</p>}
+              ) : <EmptyState icon={Medal}>{t.noRanking}</EmptyState>}
             </Card>
             <Notice>{t.rankingsRule}</Notice>
           </>

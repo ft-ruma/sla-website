@@ -58,6 +58,31 @@ header:has(.sample-notice) {
   min-width: 0;
   flex: 1 1 auto;
 }
+/* Phones and tablets: the menu gets its own row under the logo, so the logo,
+   sign-in and Register always fit and every section is one tap away. */
+@media (max-width: 1023.98px) {
+  .site-mega-nav {
+    order: 3;
+    flex-basis: 100%;
+    margin-inline: -0.75rem;
+    border-top: 1px solid rgb(17 17 17 / 0.06);
+    padding: 0.35rem 0.6rem 0.45rem;
+  }
+  .site-mega-triggers { gap: 0.35rem; }
+  .site-main-link {
+    padding: 0.5rem 0.85rem;
+    font-size: 0.8rem;
+    background: rgb(17 17 17 / 0.045);
+  }
+  /* more specific than the base panel rule further down, so it wins */
+  .site-header .site-mega-panel {
+    background: white;
+    max-height: calc(100dvh - var(--header-h));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 0 0 1.5rem 1.5rem;
+  }
+}
 .site-mega-triggers {
   display: flex;
   min-width: 0;
@@ -964,7 +989,7 @@ html:lang(si) :is(h1, h2, h3), html:lang(ta) :is(h1, h2, h3) { line-height: 1.35
     font-size: 19px !important; /* !important beats html:lang SI/TA rules */
   }
   :root {
-    --header-h: 3.5rem;
+    --header-h: 6.4rem;
     --text-xs: 0.84rem;
     --text-sm: 0.95rem;
     --text-base: 1.05rem;
@@ -976,7 +1001,7 @@ html:lang(si) :is(h1, h2, h3), html:lang(ta) :is(h1, h2, h3) { line-height: 1.35
     --text-5xl: 2.45rem;
   }
   header:has(.sample-notice) {
-    --header-h: 5.75rem;
+    --header-h: 8.2rem;
   }
 
   body {
@@ -1013,7 +1038,7 @@ html:lang(si) :is(h1, h2, h3), html:lang(ta) :is(h1, h2, h3) { line-height: 1.35
     font-size: 18.5px !important;
   }
   :root {
-    --header-h: 4.25rem;
+    --header-h: 7.4rem;
     --text-xs: 0.82rem;
     --text-sm: 0.94rem;
     --text-base: 1.05rem;
@@ -1025,7 +1050,7 @@ html:lang(si) :is(h1, h2, h3), html:lang(ta) :is(h1, h2, h3) { line-height: 1.35
     --text-5xl: 2.65rem;
   }
   header:has(.sample-notice) {
-    --header-h: 6.25rem;
+    --header-h: 9.4rem;
   }
 }
 
@@ -1043,3 +1068,7 @@ html:lang(si) :is(h1, h2, h3), html:lang(ta) :is(h1, h2, h3) { line-height: 1.35
 }
 
 /* Desktop keeps the default ~16px root */
+
+/* Sideways-swipe rows (news on phones) without a visible scrollbar. */
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
