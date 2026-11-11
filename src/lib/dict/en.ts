@@ -512,6 +512,9 @@ export const en = {
   codeEmailBody: "Your code is {code}. Enter it on the Sri Lanka Athletics website to set your password. It works for 5 minutes. If you did not ask for this code, you can ignore this email.",
   codeResetSubject: "Reset your Sri Lanka Athletics password",
   codeResetBody: "Your password reset code is {code}. It works for 5 minutes. If you did not ask to reset your password, ignore this email; your password stays the same.",
+  statRecords: "National records",
+  tickerLeader: "Season lead",
+  exploreSite: "Explore",
 };
 
 export type Dict = { [K in keyof typeof en]: string };

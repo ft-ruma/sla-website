@@ -29,7 +29,7 @@ export function PageHero({ title, intro, kicker, children }: {
   children?: React.ReactNode;
 }) {
   return (
-    <section className="relative overflow-hidden bg-night text-white">
+    <section className="grain relative overflow-hidden bg-night text-white">
       <div aria-hidden className="absolute inset-0 bg-[radial-gradient(42rem_22rem_at_88%_0%,rgb(232_93_4/0.38),transparent_65%),radial-gradient(34rem_22rem_at_0%_110%,rgb(6_7_248/0.4),transparent_65%)]" />
       <LaneLines />
       <div className="rise relative mx-auto max-w-6xl px-4 pt-10 pb-12 sm:px-6 sm:pt-16 sm:pb-20">
@@ -38,7 +38,7 @@ export function PageHero({ title, intro, kicker, children }: {
             <span className="size-1.5 rounded-full bg-accent" aria-hidden /> {kicker}
           </p>
         )}
-        <h1 className="max-w-4xl text-[2.05rem] leading-[1.1] font-extrabold tracking-tight text-balance sm:text-6xl">{title}</h1>
+        <h1 className="display max-w-5xl text-[2.9rem] text-balance sm:text-7xl lg:text-8xl">{title}</h1>
         {intro && <p className="mt-4 max-w-2xl text-[1.08rem] leading-relaxed text-white/75 text-pretty sm:text-lg">{intro}</p>}
         {children && <div className="mt-8">{children}</div>}
       </div>
@@ -62,7 +62,7 @@ export function SectionHeading({ title, kicker, intro, action, tone = "light" }:
     <div className="mb-6 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
       <div className="max-w-2xl">
         <p className={`label mb-3 ${tone === "dark" ? "text-white" : "text-ink"}`}>{kicker ?? title}</p>
-        {kicker && <h2 className={`text-2xl font-bold sm:text-3xl ${tone === "dark" ? "text-white" : "text-ink"}`}>{title}</h2>}
+        {kicker && <h2 className={`display text-4xl sm:text-5xl ${tone === "dark" ? "text-white" : "text-ink"}`}>{title}</h2>}
         {intro && <p className={`mt-2 max-w-xl text-pretty ${tone === "dark" ? "text-white/70" : "text-muted"}`}>{intro}</p>}
       </div>
       {action}

@@ -14,8 +14,12 @@ export default async function NewsPage({ params }: LangParams) {
   return (
     <>
       <PageHero kicker={t.navNews} title={t.newsTitle} intro={t.newsIntro} />
-      {featured && <NewsCard item={featured} lang={lang} t={t} variant="feature" />}
-      <Container className="grid gap-x-8 gap-y-12 py-14 sm:grid-cols-2 lg:grid-cols-3">
+      {featured && (
+        <Container className="pt-10 sm:pt-14">
+          <NewsCard item={featured} lang={lang} t={t} variant="feature" />
+        </Container>
+      )}
+      <Container className="grid gap-x-8 gap-y-12 py-10 sm:grid-cols-2 sm:py-14 lg:grid-cols-3">
         {rest.map((n) => <NewsCard key={n.slug} item={n} lang={lang} t={t} variant="card" />)}
       </Container>
     </>

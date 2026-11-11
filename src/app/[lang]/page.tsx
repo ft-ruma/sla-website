@@ -1,18 +1,19 @@
-import { ArrowRight, ClipboardCheck, LogIn, MapPin, Medal, Trophy, UserRound } from "lucide-react";
+import { ArrowRight, ArrowUpRight, ClipboardCheck, LogIn, MapPin, Trophy, UserRound } from "lucide-react";
 import Link from "next/link";
 import { ArrowLink } from "@/components/bits";
 import { CompetitionCard } from "@/components/CompetitionCard";
+import { CountUp } from "@/components/CountUp";
 import { NavIcon } from "@/components/NavIcon";
 import { NewsCard } from "@/components/NewsCard";
-import { Container, SectionHeading } from "@/components/PageHero";
+import { Container } from "@/components/PageHero";
 import { TrackArt } from "@/components/TrackArt";
 import { VerifyIdForm } from "@/components/VerifyIdForm";
 import type { NavKey } from "@/components/nav";
 import { getCompetitions, getNews, getRankings, getRecords, getSettings } from "@/lib/cms";
-import { calendar } from "@/lib/competitions";
+import { calendar, daysUntil } from "@/lib/competitions";
 import { districtName } from "@/lib/districts";
 import { formatMark, getEvent } from "@/lib/events";
-import { formatDateRange } from "@/lib/i18n";
+import { formatDate, formatDateRange } from "@/lib/i18n";
 import { pageLang, pageMeta, type LangParams } from "@/lib/page";
 import { portal } from "@/lib/portal";
 
@@ -23,26 +24,27 @@ export async function generateMetadata({ params }: LangParams) {
   return pageMeta(lang, "", t.siteName);
 }
 
-const QUICK: [NavKey, string, keyof typeof TILE_TONE][] = [
-  ["calendar", "/calendar", "orange"],
-  ["results", "/results", "blue"],
-  ["rankings", "/rankings", "green"],
-  ["records", "/records", "gold"],
-  ["athletes", "/athletes", "violet"],
-  ["clubs", "/clubs", "slate"],
+const QUICK: [NavKey, string][] = [
+  ["calendar", "/calendar"], ["results", "/results"], ["rankings", "/rankings"],
+  ["records", "/records"], ["athletes", "/athletes"], ["clubs", "/clubs"],
 ];
-const TILE_TONE = {
-  orange: "bg-accent/10 text-accent",
-  blue: "bg-brand/10 text-brand",
-  green: "bg-emerald-600/10 text-emerald-700",
-  gold: "bg-amber-400/20 text-amber-700",
-  violet: "bg-violet-600/10 text-violet-700",
-  slate: "bg-slate-600/10 text-slate-700",
-};
 const NAV_LABEL: Record<string, string> = {
   calendar: "navCalendar", results: "navResults", rankings: "navRankings", records: "navRecords",
   athletes: "navAthletes", clubs: "navClubs",
 };
+
+/** Oversized section title with a running number, e.g. "01  LATEST NEWS". */
+function BigTitle({ n, title, action, tone = "light", compact = false }: { n: string; title: string; action?: React.ReactNode; tone?: "light" | "dark"; compact?: boolean }) {
+  return (
+    <div className="reveal mb-8 flex flex-wrap items-end justify-between gap-x-6 gap-y-4 sm:mb-10">
+      <h2 className="flex items-start gap-3 sm:gap-4">
+        <span className="num mt-1 text-lg text-accent sm:mt-2 sm:text-2xl">{n}</span>
+        <span className={`display ${compact ? "text-[2.4rem] sm:text-5xl" : "text-[2.6rem] sm:text-6xl lg:text-7xl"} ${tone === "dark" ? "text-white" : "text-ink"}`}>{title}</span>
+      </h2>
+      {action}
+    </div>
+  );
+}
 
 export default async function Home({ params }: LangParams) {
   const { lang, t } = await pageLang(params);
@@ -60,6 +62,22 @@ export default async function Home({ params }: LangParams) {
     text: settings.heroText?.[lang] || t.heroText,
   };
   const next = upcoming[0];
+  const days = next ? daysUntil(next) : 0;
+  const year = new Date().getFullYear();
+  const stats = [
+    { value: competitions.filter((c) => c.start.startsWith(String(year))).length, label: t.statMeets },
+    { value: new Set(rankings.map((r) => r.event)).size, label: t.statEvents },
+    { value: allRecords.length, label: t.statRecords },
+    { value: 25, label: t.statDistricts },
+  ];
+  // the ticker: upcoming meets and season-leading marks, shown twice for a seamless loop
+  const ticker = [
+    ...upcoming.slice(0, 4).map((c) => ({ key: c.id, a: formatDate(lang, c.start, { day: "numeric", month: "short" }), b: c.name[lang] })),
+    ...leaders.map((r) => ({ key: `${r.event}-${r.gender}`, a: `${getEvent(r.event).name[lang]} · ${r.gender === "M" ? t.men : t.women}`, b: `${formatMark(r.event, r.rows[0].mark)}  ${r.rows[0].athlete}` })),
+  ];
+  // the last two words of the headline glow (e.g. "Sri Lanka")
+  const words = hero.title.split(" ");
+  const cut = words.length >= 4 ? words.length - 2 : words.length;
 
   return (
     <>
@@ -74,22 +92,25 @@ export default async function Home({ params }: LangParams) {
         </Link>
       ))}
 
-      {/* Hero: who we are, the three things people come to do, and the next meet */}
-      <section className="relative overflow-hidden bg-night text-white">
-        <div aria-hidden className="absolute inset-0 bg-[radial-gradient(60rem_30rem_at_85%_10%,rgb(232_93_4/0.35),transparent_60%),radial-gradient(40rem_30rem_at_0%_100%,rgb(6_7_248/0.35),transparent_60%)]" />
-        {/* Hidden on phones/tablets: wide SVG art made the page feel tiny. */}
-        <TrackArt numbers={false} className="pointer-events-none absolute inset-y-0 right-0 hidden w-[44rem] opacity-90 lg:block" />
-        <div aria-hidden className="absolute inset-0 bg-linear-to-r from-night via-night/80 to-transparent lg:via-night/55" />
-        <Container className="relative grid gap-10 py-16 sm:py-20 lg:grid-cols-[1.2fr_1fr] lg:py-28">
+      {/* Hero: a full-height stage with giant type, racing streaks and a countdown */}
+      <section className="grain relative overflow-hidden bg-night text-white">
+        <div aria-hidden className="absolute inset-0 bg-[radial-gradient(60rem_34rem_at_85%_0%,rgb(232_93_4/0.42),transparent_60%),radial-gradient(46rem_34rem_at_0%_100%,rgb(6_7_248/0.45),transparent_60%)]" />
+        <TrackArt numbers={false} className="pointer-events-none absolute inset-y-0 right-0 hidden w-[46rem] opacity-60 lg:block" />
+        <div aria-hidden className="absolute inset-0 bg-linear-to-r from-night via-night/85 to-night/10" />
+        <div aria-hidden className="streaks"><span /><span /><span /><span /></div>
+        <p aria-hidden className="display text-outline pointer-events-none absolute -right-4 -bottom-6 text-[9rem] leading-none select-none sm:text-[16rem] lg:-bottom-12 lg:text-[22rem]">SLA</p>
+
+        <Container className="relative grid items-center gap-12 py-14 sm:py-20 lg:min-h-[calc(100svh-var(--header-h))] lg:grid-cols-[1.35fr_1fr] lg:py-24">
           <div className="rise flex flex-col items-start">
-            <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-bold tracking-[0.14em] uppercase ring-1 ring-white/20">
-              <span className="size-1.5 rounded-full bg-accent" /> {hero.kicker}
+            <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-bold tracking-[0.14em] uppercase ring-1 ring-white/20 backdrop-blur-sm">
+              <span className="live-dot size-1.5 rounded-full bg-accent" /> {hero.kicker}
             </p>
-            <h1 className="mt-5 max-w-2xl text-[2.15rem] leading-[1.08] font-extrabold tracking-tight text-balance sm:mt-6 sm:text-6xl lg:text-7xl">
-              {hero.title}
+            <h1 className="display mt-6 max-w-3xl text-[3.1rem] text-balance sm:text-8xl lg:text-[7.5rem]">
+              {words.slice(0, cut).join(" ")}{" "}
+              {cut < words.length && <span className="text-fire pr-2">{words.slice(cut).join(" ")}</span>}
             </h1>
-            <p className="mt-4 max-w-xl text-[1.08rem] leading-relaxed text-white/80 text-pretty sm:mt-5 sm:text-lg">{hero.text}</p>
-            <div className="mt-7 flex w-full flex-col gap-3 sm:mt-8 sm:w-auto sm:flex-row sm:flex-wrap">
+            <p className="mt-6 max-w-xl text-[1.08rem] leading-relaxed text-white/75 text-pretty sm:text-xl">{hero.text}</p>
+            <div className="mt-8 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap">
               <a href={portal.home(lang)} className="btn btn-primary w-full sm:w-auto">{t.register} <ArrowRight className="size-4" aria-hidden /></a>
               <Link href={`/${lang}/sign-in`} className="btn btn-glass w-full sm:w-auto"><LogIn className="size-4" aria-hidden /> {t.signIn}</Link>
             </div>
@@ -100,17 +121,27 @@ export default async function Home({ params }: LangParams) {
           </div>
 
           {next && (
-            <div className="rise flex items-end justify-start lg:justify-end" style={{ animationDelay: "0.15s" }}>
+            <div className="rise flex lg:justify-end" style={{ animationDelay: "0.2s" }}>
               <Link href={`/${lang}/competitions/${next.id}`}
-                className="group flex w-full max-w-sm flex-col items-start rounded-3xl bg-night/70 p-6 ring-1 ring-white/20 backdrop-blur-md transition hover:bg-night/80">
-                <p className="text-xs font-bold tracking-[0.14em] text-accent uppercase">{t.nextMeets}</p>
-                <p className="mt-3 text-2xl leading-tight font-extrabold text-balance">{next.name[lang]}</p>
-                <p className="mt-3 text-sm text-white/75">{formatDateRange(lang, next.start, next.end)}</p>
-                <p className="mt-1 inline-flex items-center gap-1.5 text-sm text-white/75">
+                className="group glow relative w-full max-w-sm overflow-hidden rounded-[2rem] bg-white/[0.06] p-7 ring-1 ring-white/15 backdrop-blur-xl">
+                <div aria-hidden className="absolute -top-16 -right-16 size-48 rounded-full bg-accent/40 blur-3xl" />
+                <p className="relative text-xs font-bold tracking-[0.16em] text-accent uppercase">{t.nextUp}</p>
+                <div className="relative mt-4 flex items-end gap-3">
+                  {days > 0 ? (
+                    <>
+                      <span className="num text-[6.5rem] text-white">{days}</span>
+                      <span className="mb-3 text-sm font-bold tracking-wide text-white/70 uppercase">{t.daysToGo}</span>
+                    </>
+                  ) : <span className="display text-5xl text-fire">{t.startsToday}</span>}
+                </div>
+                <p className="relative mt-5 text-2xl leading-tight font-extrabold text-balance">{next.name[lang]}</p>
+                <p className="relative mt-3 text-sm text-white/70">{formatDateRange(lang, next.start, next.end)}</p>
+                <p className="relative mt-1 inline-flex items-center gap-1.5 text-sm text-white/70">
                   <MapPin className="size-3.5" aria-hidden /> {next.venue}, {districtName(lang, next.district)}
                 </p>
-                <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-bold group-hover:gap-2.5">
-                  {t.fullCalendar} <ArrowRight className="size-4 transition-all" aria-hidden />
+                <span className="relative mt-6 flex items-center justify-between border-t border-white/15 pt-5 text-sm font-bold">
+                  {t.fullCalendar}
+                  <span className="grid size-10 place-items-center rounded-full bg-accent transition group-hover:rotate-45"><ArrowUpRight className="size-5" aria-hidden /></span>
                 </span>
               </Link>
             </div>
@@ -118,121 +149,166 @@ export default async function Home({ params }: LangParams) {
         </Container>
       </section>
 
-      {/* Quick access */}
-      <section className="relative z-10 -mt-8">
-        <Container>
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-            {QUICK.map(([key, path, tone]) => (
-              <li key={key}>
-                <Link href={`/${lang}${path}`} className="group card card-hover tap flex h-full flex-col gap-3 p-4 sm:p-4">
-                  <span className={`grid size-12 place-items-center rounded-2xl sm:size-11 ${TILE_TONE[tone]}`}>
-                    <NavIcon name={key} className="size-6 sm:size-5" />
+      {/* Ticker: meets and season leads sliding past on a slanted orange band */}
+      {ticker.length > 0 && (
+        <div className="relative z-10 -mt-5 overflow-hidden py-5">
+          <div className="band-skew bg-accent py-3.5 text-white shadow-[0_20px_40px_-20px_rgb(232_93_4/0.8)]">
+            <div className="marquee">
+              <div className="marquee-track">
+                {[0, 1].map((copy) => (
+                  <ul key={copy} aria-hidden={copy === 1} className="flex shrink-0 items-center">
+                    {ticker.map((i) => (
+                      <li key={`${copy}-${i.key}`} className="flex items-center gap-3 px-6 whitespace-nowrap">
+                        <span className="text-xs font-bold tracking-[0.14em] text-white/75 uppercase">{i.a}</span>
+                        <span className="display text-xl sm:text-2xl">{i.b}</span>
+                        <span aria-hidden className="ml-6 text-white/60">✦</span>
+                      </li>
+                    ))}
+                  </ul>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Numbers that count up */}
+      <Container className="py-12 sm:py-16">
+        <dl className="reveal grid grid-cols-2 gap-px overflow-hidden rounded-[2rem] bg-line ring-1 ring-line lg:grid-cols-4">
+          {stats.map((st) => (
+            <div key={st.label} className="flex flex-col gap-2 bg-white p-6 sm:p-8">
+              <dd className="num text-6xl text-ink sm:text-7xl"><CountUp value={st.value} /><span className="text-accent">.</span></dd>
+              <dt className="text-sm font-semibold text-muted">{st.label}</dt>
+            </div>
+          ))}
+        </dl>
+      </Container>
+
+      {/* Explore: numbered tiles that flip to black on hover */}
+      <Container className="pb-16 sm:pb-24">
+        <BigTitle n="01" title={t.exploreSite} />
+        <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+          {QUICK.map(([key, path], i) => (
+            <li key={key} className="reveal">
+              <Link href={`/${lang}${path}`}
+                className="group relative flex h-full min-h-36 flex-col justify-between overflow-hidden rounded-[1.75rem] bg-sand p-5 transition duration-300 hover:bg-night hover:text-white sm:min-h-48 sm:p-7">
+                <span className="flex items-start justify-between">
+                  <span className="grid size-12 place-items-center rounded-2xl bg-white text-ink shadow-sm transition group-hover:bg-accent group-hover:text-white sm:size-14">
+                    <NavIcon name={key} className="size-6" />
                   </span>
-                  <span className="flex items-center justify-between gap-2 text-[1.02rem] font-bold sm:text-base">
-                    {t[NAV_LABEL[key] as keyof typeof t]}
-                    <ArrowRight className="size-4 shrink-0 text-muted transition group-hover:translate-x-0.5 group-hover:text-accent" aria-hidden />
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </Container>
-      </section>
+                  <span className="num text-xl text-ink/25 transition group-hover:text-white/40 sm:text-3xl">0{i + 1}</span>
+                </span>
+                <span className="mt-6 flex items-end justify-between gap-2">
+                  <span className="display min-w-0 text-[1.3rem] sm:text-4xl">{t[NAV_LABEL[key] as keyof typeof t]}</span>
+                  <ArrowUpRight className="mb-1 size-6 shrink-0 transition duration-300 group-hover:rotate-45 group-hover:text-accent" aria-hidden />
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </Container>
 
       {/* News: one lead story and three more */}
-      <Container className="py-16 sm:py-20">
-        <div className="mb-8 flex items-end justify-between gap-4">
-          <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">{t.latestNews}</h2>
-          <ArrowLink href={`/${lang}/news`}>{t.allNews}</ArrowLink>
-        </div>
-        {lead && <NewsCard item={lead} lang={lang} t={t} variant="feature" />}
+      <Container className="pb-16 sm:pb-24">
+        <BigTitle n="02" title={t.latestNews} action={<ArrowLink href={`/${lang}/news`}>{t.allNews}</ArrowLink>} />
+        {lead && <div className="reveal"><NewsCard item={lead} lang={lang} t={t} variant="feature" /></div>}
         {/* Phones: a swipeable row of cards (with the next one peeking in) instead of a long stack. */}
         <div className="no-scrollbar -mx-4 mt-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:snap-none sm:grid-cols-2 sm:gap-6 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3">
           {rest.slice(0, 3).map((n, i) => (
             // two columns on tablets show two cards, so the third would sit alone: show it on phones and desktops only
-            <div key={n.slug} className={`w-[82%] shrink-0 snap-start sm:w-auto ${i === 2 ? "sm:max-lg:hidden" : ""}`}>
+            <div key={n.slug} className={`reveal glow w-[82%] shrink-0 snap-start rounded-[var(--radius-card)] sm:w-auto ${i === 2 ? "sm:max-lg:hidden" : ""}`}>
               <NewsCard item={n} lang={lang} t={t} variant="card" />
             </div>
           ))}
         </div>
       </Container>
 
-      {/* Get involved */}
-      <section className="bg-sand py-16 sm:py-20">
-        <Container>
-          <div className="max-w-2xl">
-            <p className="label text-ink">{t.getInvolved}</p>
-            <p className="mt-3 text-lg text-muted text-pretty">{t.getInvolvedText}</p>
-          </div>
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="card flex flex-col gap-4 p-6">
-              <span className="grid size-12 place-items-center rounded-2xl bg-accent text-white"><UserRound className="size-6" aria-hidden /></span>
-              <h3 className="text-xl font-extrabold">{t.athleteCard}</h3>
-              <p className="flex-1 text-muted">{t.athleteCardText}</p>
-              <a href={portal.athlete(lang)} className="btn btn-primary self-start">{t.registerAthlete}</a>
-            </div>
-            <div className="card flex flex-col gap-4 p-6">
-              <span className="grid size-12 place-items-center rounded-2xl bg-brand text-white"><ClipboardCheck className="size-6" aria-hidden /></span>
-              <h3 className="text-xl font-extrabold">{t.coachCard}</h3>
-              <p className="flex-1 text-muted">{t.coachCardText}</p>
-              <a href={portal.coach(lang)} className="btn btn-dark self-start">{t.registerCoach}</a>
-            </div>
-            <div className="flex flex-col gap-4 rounded-[var(--radius-card)] bg-night p-6 text-white sm:col-span-2 lg:col-span-1">
-              <span className="grid size-12 place-items-center rounded-2xl bg-white/10 ring-1 ring-white/20"><LogIn className="size-6" aria-hidden /></span>
-              <h3 className="text-xl font-extrabold">{t.signInTitle}</h3>
+      {/* Get involved: a dark stage with three bold doors */}
+      <section className="grain relative overflow-hidden bg-night py-16 text-white sm:py-24">
+        <div aria-hidden className="absolute inset-0 bg-[radial-gradient(40rem_24rem_at_100%_0%,rgb(232_93_4/0.25),transparent_60%),radial-gradient(40rem_24rem_at_0%_100%,rgb(6_7_248/0.3),transparent_60%)]" />
+        <p aria-hidden className="display text-outline pointer-events-none absolute -top-6 left-0 text-[7rem] leading-none whitespace-nowrap select-none sm:text-[13rem]">{t.getInvolved}</p>
+        <Container className="relative">
+          <BigTitle n="03" title={t.getInvolved} tone="dark" />
+          <p className="reveal -mt-4 mb-10 max-w-2xl text-lg text-white/70 text-pretty">{t.getInvolvedText}</p>
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <a href={portal.athlete(lang)} className="reveal glow group relative flex min-h-80 flex-col gap-4 overflow-hidden rounded-[2rem] bg-linear-to-br from-[#ff7a1a] to-[#c2410c] p-7">
+              <UserRound aria-hidden className="absolute -right-6 -bottom-6 size-48 text-white/10 transition duration-500 group-hover:scale-110" />
+              <span className="grid size-14 place-items-center rounded-2xl bg-white/20 ring-1 ring-white/30"><UserRound className="size-7" aria-hidden /></span>
+              <h3 className="display text-4xl">{t.athleteCard}</h3>
+              <p className="flex-1 text-white/85">{t.athleteCardText}</p>
+              <span className="inline-flex items-center gap-2 self-start rounded-full bg-white px-5 py-3 text-sm font-bold text-[#c2410c]">{t.registerAthlete} <ArrowRight className="size-4 transition group-hover:translate-x-1" aria-hidden /></span>
+            </a>
+            <a href={portal.coach(lang)} className="reveal glow group relative flex min-h-80 flex-col gap-4 overflow-hidden rounded-[2rem] bg-linear-to-br from-[#3b3dff] to-[#0405b8] p-7">
+              <ClipboardCheck aria-hidden className="absolute -right-6 -bottom-6 size-48 text-white/10 transition duration-500 group-hover:scale-110" />
+              <span className="grid size-14 place-items-center rounded-2xl bg-white/20 ring-1 ring-white/30"><ClipboardCheck className="size-7" aria-hidden /></span>
+              <h3 className="display text-4xl">{t.coachCard}</h3>
+              <p className="flex-1 text-white/85">{t.coachCardText}</p>
+              <span className="inline-flex items-center gap-2 self-start rounded-full bg-white px-5 py-3 text-sm font-bold text-brand">{t.registerCoach} <ArrowRight className="size-4 transition group-hover:translate-x-1" aria-hidden /></span>
+            </a>
+            <Link href={`/${lang}/sign-in`} className="reveal glow group relative flex min-h-80 flex-col gap-4 overflow-hidden rounded-[2rem] bg-white/[0.06] p-7 ring-1 ring-white/15 backdrop-blur-xl sm:col-span-2 lg:col-span-1">
+              <LogIn aria-hidden className="absolute -right-6 -bottom-6 size-48 text-white/[0.06] transition duration-500 group-hover:scale-110" />
+              <span className="grid size-14 place-items-center rounded-2xl bg-white/10 ring-1 ring-white/20"><LogIn className="size-7" aria-hidden /></span>
+              <h3 className="display text-4xl">{t.signInTitle}</h3>
               <p className="flex-1 text-white/70">{t.signInFirstTime}</p>
-              <Link href={`/${lang}/sign-in`} className="btn btn-glass self-start">{t.signIn}</Link>
-            </div>
+              <span className="inline-flex items-center gap-2 self-start rounded-full bg-accent px-5 py-3 text-sm font-bold text-white">{t.signIn} <ArrowRight className="size-4 transition group-hover:translate-x-1" aria-hidden /></span>
+            </Link>
           </div>
         </Container>
       </section>
 
-      {/* Competitions, season leaders and records */}
-      <Container className="grid gap-14 py-16 sm:py-20 lg:grid-cols-[1.1fr_1fr]">
+      {/* Season leaders: big marks, the best one on black */}
+      <Container className="py-16 sm:py-24">
+        <BigTitle n="04" title={t.seasonLeaders} action={<ArrowLink href={`/${lang}/rankings`}>{t.allRankings}</ArrowLink>} />
+        <ul className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
+          {leaders.map((r, i) => {
+            const top = r.rows[0];
+            const star = i === 0;
+            return (
+              <li key={`${r.event}-${r.gender}`} className="reveal">
+                <Link href={`/${lang}/rankings?event=${r.event}&gender=${r.gender}`}
+                  className={`glow group relative flex h-full flex-col gap-3 overflow-hidden rounded-[1.75rem] p-4 sm:p-6 ${star ? "grain bg-night text-white" : "bg-sand"}`}>
+                  {star && <div aria-hidden className="absolute -top-20 -right-20 size-56 rounded-full bg-accent/40 blur-3xl" />}
+                  <span className="relative flex items-center justify-between gap-2">
+                    <span className={`text-xs font-bold tracking-[0.14em] uppercase ${star ? "text-white/70" : "text-muted"}`}>
+                      {getEvent(r.event).name[lang]} · {r.gender === "M" ? t.men : t.women}
+                    </span>
+                    <span className={`num grid size-9 place-items-center rounded-full text-base ${star ? "bg-gold text-ink" : "bg-white text-ink"}`}>1</span>
+                  </span>
+                  <span className="num relative text-[2.4rem] sm:text-7xl">{formatMark(r.event, top.mark)}</span>
+                  <span className={`relative flex items-center justify-between gap-2 border-t pt-3 ${star ? "border-white/15" : "border-ink/10"}`}>
+                    <span className="truncate text-sm font-bold sm:text-base">{top.athlete}</span>
+                    <ArrowUpRight className="size-5 shrink-0 transition group-hover:rotate-45 group-hover:text-accent" aria-hidden />
+                  </span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </Container>
+
+      {/* Next competitions beside the national records board */}
+      <Container className="grid gap-14 pb-16 sm:pb-24 lg:grid-cols-[1.25fr_1fr]">
         <div>
-          <SectionHeading title={t.nextMeets} action={<ArrowLink href={`/${lang}/calendar`}>{t.fullCalendar}</ArrowLink>} />
+          <BigTitle n="05" compact title={t.nextMeets} action={<ArrowLink href={`/${lang}/calendar`}>{t.fullCalendar}</ArrowLink>} />
           {upcoming.length ? upcoming.slice(0, 4).map((c) => (
-            <CompetitionCard key={c.id} c={c} lang={lang} t={t} />
+            <div key={c.id} className="reveal"><CompetitionCard c={c} lang={lang} t={t} /></div>
           )) : <p className="text-muted">{t.noUpcoming}</p>}
         </div>
-        <div>
-          <SectionHeading title={t.seasonLeaders} intro={t.leadersIntro} action={<ArrowLink href={`/${lang}/rankings`}>{t.allRankings}</ArrowLink>} />
-          <ul className="grid grid-cols-2 gap-3">
-            {leaders.map((r) => {
-              const top = r.rows[0];
-              return (
-                <li key={`${r.event}-${r.gender}`}>
-                  <Link href={`/${lang}/rankings?event=${r.event}&gender=${r.gender}`}
-                    className="group card card-hover flex h-full flex-col gap-2 p-4">
-                    <span className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-bold tracking-[0.12em] text-muted uppercase">
-                        {getEvent(r.event).name[lang]} · {r.gender === "M" ? t.men : t.women}
-                      </span>
-                      <Medal className="size-4 text-amber-500" aria-hidden />
-                    </span>
-                    <span className="text-2xl font-extrabold tracking-tight tabular sm:text-3xl">{formatMark(r.event, top.mark)}</span>
-                    <span className="truncate text-sm font-semibold">{top.athlete}</span>
-                  </Link>
-                </li>
-              );
-            })}
+        <div className="reveal grain relative self-start overflow-hidden rounded-[2rem] bg-night p-7 text-white">
+          <div aria-hidden className="absolute -bottom-24 -left-24 size-64 rounded-full bg-brand/50 blur-3xl" />
+          <p className="relative flex items-center gap-2 text-xs font-bold tracking-[0.16em] text-accent uppercase"><Trophy className="size-4" aria-hidden /> {t.nationalRecords}</p>
+          <ul className="relative mt-4 divide-y divide-white/10">
+            {records.map((r) => (
+              <li key={`${r.event}-${r.gender}`} className="flex items-center justify-between gap-4 py-4">
+                <span className="min-w-0">
+                  <span className="block text-xs font-bold tracking-wider text-white/55 uppercase">{getEvent(r.event).name[lang]} · {r.gender === "M" ? t.men : t.women}</span>
+                  <span className="block truncate font-semibold">{r.athlete}</span>
+                </span>
+                <span className="num shrink-0 text-3xl text-fire sm:text-4xl">{formatMark(r.event, r.mark)}</span>
+              </li>
+            ))}
           </ul>
-
-          <div className="card mt-6 p-5">
-            <p className="flex items-center gap-2 font-extrabold"><Trophy className="size-5 text-accent" aria-hidden /> {t.nationalRecords}</p>
-            <ul className="mt-3 divide-y divide-line">
-              {records.map((r) => (
-                <li key={`${r.event}-${r.gender}`} className="flex items-baseline justify-between gap-4 py-3">
-                  <span className="min-w-0">
-                    <span className="block text-xs font-bold tracking-wider text-muted uppercase">{getEvent(r.event).name[lang]} · {r.gender === "M" ? t.men : t.women}</span>
-                    <span className="block truncate font-semibold">{r.athlete}</span>
-                  </span>
-                  <span className="font-extrabold tabular">{formatMark(r.event, r.mark)}</span>
-                </li>
-              ))}
-            </ul>
-            <ArrowLink href={`/${lang}/records`} className="mt-3">{t.allRecords}</ArrowLink>
-          </div>
+          <ArrowLink href={`/${lang}/records`} tone="dark" className="relative mt-4">{t.allRecords}</ArrowLink>
         </div>
       </Container>
     </>
