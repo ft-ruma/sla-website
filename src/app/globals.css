@@ -1502,16 +1502,34 @@ html.lenis, html.lenis body { height: auto; }
   flex: none;
   align-items: center;
   gap: 0.75rem;
+  border: 0;
   border-radius: 0.7rem;
+  background: transparent;
   padding: 0.65rem 0.85rem;
   font-size: 0.9rem;
   font-weight: 600;
   white-space: nowrap;
   color: rgb(255 255 255 / 0.72);
+  cursor: pointer;
+  text-align: left;
   transition: background 0.15s, color 0.15s;
 }
 .portal-nav-link:hover { background: rgb(255 255 255 / 0.08); color: white; }
 .portal-nav-link[aria-current="page"] { background: var(--p-blue); color: white; box-shadow: 0 8px 18px -10px rgb(43 79 216 / 0.9); }
+.portal-spinner {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgb(17 17 17 / 0.15);
+  border-top-color: currentColor;
+  border-radius: 999px;
+  animation: portal-spin 0.7s linear infinite;
+}
+@keyframes portal-spin { to { transform: rotate(360deg); } }
+.portal-btn-pending { opacity: 0.75; cursor: wait; }
+@media (prefers-reduced-motion: reduce) {
+  .portal-spinner { animation: none; border-top-color: transparent; }
+}
 .portal-logout { display: none; }
 @media (min-width: 1024px) { .portal-logout { display: block; margin-top: auto; border-top: 1px solid rgb(255 255 255 / 0.1); padding-top: 0.75rem; } }
 
@@ -1569,7 +1587,10 @@ html.lenis, html.lenis body { height: auto; }
 .portal-btn-outline { color: var(--p-blue); box-shadow: inset 0 0 0 1.5px #c9d3f6; background: white; }
 .portal-btn-outline:hover { box-shadow: inset 0 0 0 1.5px var(--p-blue); background: #f5f7ff; }
 
-.portal-chip { border-radius: 0.55rem; padding: 0.35rem 0.7rem; font-size: 0.78rem; font-weight: 600; color: #4b5563; box-shadow: inset 0 0 0 1px #e1e5ef; }
+.portal-chip {
+  border: 0; border-radius: 0.55rem; background: white; padding: 0.35rem 0.7rem;
+  font-size: 0.78rem; font-weight: 600; color: #4b5563; box-shadow: inset 0 0 0 1px #e1e5ef; cursor: pointer;
+}
 .portal-chip:hover { color: var(--p-blue); }
 .portal-chip[aria-current="true"] { background: var(--p-blue); color: white; box-shadow: none; }
 

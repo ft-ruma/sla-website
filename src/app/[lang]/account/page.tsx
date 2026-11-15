@@ -3,7 +3,10 @@ import { redirect } from "next/navigation";
 import { Notice } from "@/components/bits";
 import { ChangePassword } from "@/components/MemberForms";
 import { AthleteDashboard, CoachDashboard, PrivacyCard } from "@/components/Dashboard";
-import { AthleteOverview, HistoryView, PortalHeading, PortalShell, portalViews, ProfileView, type PortalView } from "@/components/MemberPortal";
+import {
+  AthleteOverview, HistoryView, PortalHeading, ProfileView, portalViews, type PortalView,
+} from "@/components/MemberPortal";
+import { PortalShell } from "@/components/PortalShell";
 import type { DashMessage } from "@/lib/dashboard-actions";
 import { coachSearch, dashboard, dashboardAvailable, type CoachHit } from "@/lib/member-dashboard";
 import { Container } from "@/components/PageHero";
@@ -29,13 +32,16 @@ export default async function AccountPage({
   searchParams,
 }: LangParams & { searchParams: Promise<Record<string, string | undefined>> }) {
   const { lang, t } = await pageLang(params);
-  const member = await currentMember().catch(() => null);
+  // Load session and registrations together so the first paint waits on one round-trip.
+  const [member, records] = await Promise.all([
+    currentMember().catch(() => null),
+    memberRecords().catch(() => [] as Awaited<ReturnType<typeof memberRecords>>),
+  ]);
   if (!member) redirect(`/${lang}/sign-in`);
-  const s = await searchParams;
-  const records = await memberRecords().catch(() => []);
   if (!records.length) {
     return <Container className="py-16"><Notice>{t.accountPending}</Notice></Container>;
   }
+  const s = await searchParams;
   // one registration at a time: ?r= picks it (several can share an email)
   const r = records.find((x) => x.slaa_id === (s.r ?? "").toUpperCase()) ?? records[0];
   const d = (await dashboard(r.slaa_id).catch(() => null)) ?? undefined;
@@ -45,39 +51,36 @@ export default async function AccountPage({
   const hits: CoachHit[] | null = coachQuery && s.for === r.slaa_id ? await coachSearch(coachQuery).catch(() => []) : null;
   const message = s.msg && `dashMsg_${s.msg}` in t ? (s.msg as DashMessage) : null;
 
+  const toast = message && s.r === r.slaa_id ? (
+    <p role={GOOD.includes(message) ? "status" : "alert"}
+      className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold ${GOOD.includes(message) ? "dash-toast-ok" : "dash-toast-err"}`}>
+      {t[`dashMsg_${message}` as keyof Dict]}
+    </p>
+  ) : null;
+
+  const overview = d?.is_athlete
+    ? <AthleteOverview lang={lang} t={t} r={r} d={d} ev={s.ev} />
+    : d?.is_coach && d.coach
+      ? <>
+          <PortalHeading title={t.portalNavDashboard} intro={fill(t.portalWelcome, { name: (r.details?.full_name ?? r.display_name).split(/\s+/)[0] })} r={r} t={t} />
+          <CoachDashboard lang={lang} t={t} d={d} />
+        </>
+      : <ProfileView lang={lang} t={t} r={r} />;
+
   return (
-    <PortalShell lang={lang} t={t} records={records} r={r} d={d} view={view}>
-      {!dashboardAvailable() && <Notice>{t.dashUnavailable}</Notice>}
-      {message && s.r === r.slaa_id && (
-        <p role={GOOD.includes(message) ? "status" : "alert"}
-          className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold ${GOOD.includes(message) ? "dash-toast-ok" : "dash-toast-err"}`}>
-          {t[`dashMsg_${message}` as keyof Dict]}
-        </p>
-      )}
-
-      {view === "overview" && (d?.is_athlete
-        ? <AthleteOverview lang={lang} t={t} r={r} d={d} ev={s.ev} />
-        : d?.is_coach && d.coach
-          ? <><PortalHeading title={t.portalNavDashboard} intro={fill(t.portalWelcome, { name: (r.details?.full_name ?? r.display_name).split(/\s+/)[0] })} r={r} t={t} />
-              <CoachDashboard lang={lang} t={t} d={d} /></>
-          : <ProfileView lang={lang} t={t} r={r} />)}
-
-      {view === "profile" && <ProfileView lang={lang} t={t} r={r} />}
-
-      {view === "performance" && d?.is_athlete && (
-        <AthleteDashboard lang={lang} t={t} d={d} status={r.status} coachQuery="" hits={null} only="performance" />
-      )}
-
-      {view === "history" && d?.is_athlete && <HistoryView lang={lang} t={t} r={r} d={d} />}
-
-      {view === "coaches" && d?.is_athlete && (
-        <AthleteDashboard lang={lang} t={t} d={d} status={r.status}
-          coachQuery={s.for === r.slaa_id ? coachQuery : ""} hits={hits} only="coach" />
-      )}
-
-      {view === "squad" && d?.is_coach && d.coach && <CoachDashboard lang={lang} t={t} d={d} />}
-
-      {view === "settings" && (
+    <PortalShell lang={lang} t={t} records={records} r={r} d={d} view={view} panels={{
+      overview: <>{!dashboardAvailable() && <Notice>{t.dashUnavailable}</Notice>}{toast}{overview}</>,
+      profile: <ProfileView lang={lang} t={t} r={r} />,
+      performance: d?.is_athlete
+        ? <AthleteDashboard lang={lang} t={t} d={d} status={r.status} coachQuery="" hits={null} only="performance" />
+        : null,
+      history: d?.is_athlete ? <HistoryView lang={lang} t={t} r={r} d={d} /> : null,
+      coaches: d?.is_athlete
+        ? <AthleteDashboard lang={lang} t={t} d={d} status={r.status}
+            coachQuery={s.for === r.slaa_id ? coachQuery : ""} hits={hits} only="coach" />
+        : null,
+      squad: d?.is_coach && d.coach ? <CoachDashboard lang={lang} t={t} d={d} /> : null,
+      settings: (
         <div className="flex flex-col gap-6">
           <PortalHeading title={t.portalNavSettings} t={t} />
           {d && <PrivacyCard lang={lang} t={t} d={d} />}
@@ -95,7 +98,7 @@ export default async function AccountPage({
             </div>
           </div>
         </div>
-      )}
-    </PortalShell>
+      ),
+    }} />
   );
 }
