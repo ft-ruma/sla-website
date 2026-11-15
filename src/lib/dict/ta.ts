@@ -201,7 +201,7 @@ export const ta: Dict = {
   footerJoin: "இணையுங்கள்",
   footerLegal: "சட்டம்",
   footerBuiltBy: "வடிவமைத்து உருவாக்கியது",
-  footerAscendIt: "AscendIT(Pvt) Ltd.",
+  footerAscendIt: "AscendIT Media (Pvt) Ltd.",
   rights: "அனைத்து உரிமைகளும் பாதுகாக்கப்பட்டவை.",
   notFoundTitle: "பக்கம் கிடைக்கவில்லை",
   notFoundText: "நீங்கள் தேடும் பக்கம் இல்லை அல்லது இடம் மாற்றப்பட்டுள்ளது.",

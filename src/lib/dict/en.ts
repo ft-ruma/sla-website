@@ -213,7 +213,7 @@ export const en = {
   footerJoin: "Join",
   footerLegal: "Legal",
   footerBuiltBy: "Designed & Developed by",
-  footerAscendIt: "AscendIT(Pvt) Ltd.",
+  footerAscendIt: "AscendIT Media (Pvt) Ltd.",
   rights: "All rights reserved.",
   notFoundTitle: "Page not found",
   notFoundText: "The page you are looking for does not exist or has moved.",

@@ -65,7 +65,7 @@ export function SiteFooter({ lang, t }: { lang: Lang; t: Dict }) {
               height={141}
               className="h-5 w-auto sm:h-6"
             />
-            <span className="font-medium tracking-wide text-white/70">(Pvt) Ltd.</span>
+            <span className="font-medium tracking-wide text-white/70">Media (Pvt) Ltd.</span>
           </a>
           <a
             href="https://www.ascendit.dev"
