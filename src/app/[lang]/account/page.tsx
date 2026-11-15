@@ -4,9 +4,10 @@ import { Notice } from "@/components/bits";
 import { ChangePassword } from "@/components/MemberForms";
 import { AthleteDashboard, CoachDashboard, PrivacyCard } from "@/components/Dashboard";
 import {
-  AthleteOverview, HistoryView, PortalHeading, ProfileView, portalViews, type PortalView,
+  AthleteOverview, HistoryView, PortalHeading, ProfileView,
 } from "@/components/MemberPortal";
 import { PortalShell } from "@/components/PortalShell";
+import { portalViews, type PortalView } from "@/components/portal-nav";
 import type { DashMessage } from "@/lib/dashboard-actions";
 import { coachSearch, dashboard, dashboardAvailable, type CoachHit } from "@/lib/member-dashboard";
 import { Container } from "@/components/PageHero";

@@ -49,8 +49,10 @@ const initials = (name: string) =>
 
 function waitingCount(d: Dashboard | undefined) {
   if (!d) return 0;
-  const coach = d.coach ? d.coach.requests.length + d.coach.marks.length : 0;
-  return coach + d.marks.filter((m) => m.status === "pending").length;
+  const coach = d.coach
+    ? (d.coach.requests?.length ?? 0) + (d.coach.marks?.length ?? 0)
+    : 0;
+  return coach + (d.marks?.filter((m) => m.status === "pending").length ?? 0);
 }
 
 function viewFromUrl(fallback: PortalView, allowed: PortalView[]) {

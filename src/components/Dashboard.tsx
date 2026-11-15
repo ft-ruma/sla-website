@@ -1137,7 +1137,7 @@ export function PrivacyCard({ lang, t, d }: { lang: Lang; t: Dict; d: Dashboard 
             <label key={key} className="flex cursor-pointer items-center justify-between gap-4 border-b border-line py-3.5 text-sm last:border-0">
               <span className="pr-3 leading-snug">{label}</span>
               <span className="relative inline-flex shrink-0">
-                <input type="checkbox" name={key} defaultChecked={!!d.privacy[key]} className="peer sr-only" />
+                <input type="checkbox" name={key} defaultChecked={!!d.privacy?.[key]} className="peer sr-only" />
                 <span className="h-7 w-12 rounded-full bg-black/15 transition-colors peer-checked:bg-brand peer-focus-visible:outline-2 peer-focus-visible:outline-brand" />
                 <span className="absolute top-1 left-1 size-5 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-5" />
               </span>
