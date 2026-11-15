@@ -502,8 +502,10 @@ function EventCard({ lang, t, e, marks, slaaId }: { lang: Lang; t: Dict; e: Even
   );
 }
 
-export function AthleteDashboard({ lang, t, d, status, coachQuery, hits }: {
+export function AthleteDashboard({ lang, t, d, status, coachQuery, hits, only }: {
   lang: Lang; t: Dict; d: Dashboard; status: MemberRecord["status"]; coachQuery: string; hits: CoachHit[] | null;
+  /** Show just one part (the portal gives each its own page). */
+  only?: "performance" | "coach";
 }) {
   const active = d.coaches.filter((c) => c.state === "active");
   const awaiting = d.coaches.filter((c) => c.state === "awaiting");
@@ -541,6 +543,7 @@ export function AthleteDashboard({ lang, t, d, status, coachQuery, hits }: {
 
   return (
     <>
+      {only !== "coach" && (
       <section className="flex flex-col gap-5">
         <SectionHead id={`perf-${d.slaa_id}`} kicker={t.dashNavPerformance} title={t.dashEventsTitle}
           intro={t.dashEventsIntro} icon={<Trophy className="size-5" aria-hidden />} />
@@ -664,7 +667,9 @@ export function AthleteDashboard({ lang, t, d, status, coachQuery, hits }: {
           </form>
         </div>
       </section>
+      )}
 
+      {only !== "performance" && (
       <section className="flex flex-col gap-5">
         <SectionHead id={`coach-${d.slaa_id}`} kicker={t.dashNavCoach} title={t.dashCoachTitle}
           icon={<UserCheck className="size-6 text-accent" aria-hidden />} />
@@ -705,8 +710,10 @@ export function AthleteDashboard({ lang, t, d, status, coachQuery, hits }: {
         <div className={PANEL}>
           <h3 className="font-bold">{active.length ? t.dashChangeCoach : t.dashChooseCoach}</h3>
           <p className="mt-1 text-sm text-muted">{active.length ? t.dashChangeCoachIntro : t.dashChooseCoachIntro}</p>
-          <form method="get" action={`/${lang}/account#coach-${d.slaa_id}`} className="mt-4 flex flex-col gap-2 sm:flex-row">
+          <form method="get" action={`/${lang}/account`} className="mt-4 flex flex-col gap-2 sm:flex-row">
             <input type="hidden" name="for" value={d.slaa_id} />
+            <input type="hidden" name="r" value={d.slaa_id} />
+            <input type="hidden" name="view" value="coaches" />
             <input name="coachq" defaultValue={coachQuery} minLength={2} maxLength={80} required
               placeholder={t.dashCoachSearchHint} aria-label={t.dashCoachSearchHint} className={INPUT} />
             <button className={`${BUTTON} shrink-0`}><Search className="size-4" aria-hidden /> {t.dashSearch}</button>
@@ -748,6 +755,7 @@ export function AthleteDashboard({ lang, t, d, status, coachQuery, hits }: {
           ) : <p className="mt-3 text-sm text-muted">{t.dashNoCoachFound}</p>)}
         </div>
       </section>
+      )}
     </>
   );
 }
@@ -1033,7 +1041,7 @@ export function CoachDashboard({ lang, t, d }: { lang: Lang; t: Dict; d: Dashboa
                       <input type="hidden" name="decision" value="decline" />
                       <input name="note" maxLength={500} placeholder={t.dashRejectReason} aria-label={t.dashRejectReason}
                         className="dash-input h-9 w-44 text-xs" />
-                      <DashPendingButton className={GHOST}>{t.dashRejectMark}</DashPendingButton>
+                      <DashPendingButton className={`${GHOST} shrink-0 whitespace-nowrap`}>{t.dashRejectMark}</DashPendingButton>
                     </form>
                   </div>
                 </li>

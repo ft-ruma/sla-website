@@ -16,9 +16,20 @@ export type DashMessage =
 
 const field = (form: FormData, name: string) => String(form.get(name) ?? "").trim();
 
+/** The dashboard page each result belongs to, so the member lands back where they were. */
+const VIEW_OF: Partial<Record<DashMessage, string>> = {
+  privacySaved: "settings",
+  markSent: "performance", markInvalid: "performance", markLimited: "performance", markWithdrawn: "performance",
+  coachRequested: "coaches", coachUnknown: "coaches", coachSelf: "coaches", coachAlready: "coaches",
+  coachLimited: "coaches", coachCancelled: "coaches",
+  linkAccepted: "squad", linkDeclined: "squad", pastConfirmed: "squad", pastDeclined: "squad",
+  markApproved: "squad", markRejected: "squad", pbConfirmed: "squad",
+};
+
 function back(form: FormData, message: DashMessage, slaaId: string): never {
   const lang = field(form, "lang");
-  const target = `/${isLang(lang) ? lang : DEFAULT_LANG}/account?msg=${message}&r=${encodeURIComponent(slaaId)}#r-${slaaId}`;
+  const view = VIEW_OF[message];
+  const target = `/${isLang(lang) ? lang : DEFAULT_LANG}/account?msg=${message}&r=${encodeURIComponent(slaaId)}${view ? `&view=${view}` : ""}`;
   redirect(target);
 }
 
