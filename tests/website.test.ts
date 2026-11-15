@@ -13,15 +13,18 @@ import { isValidSlaaId, normalizeSlaaId } from "@/lib/slaa-id";
 
 describe("SLA ID", () => {
   it("matches the plan's test vectors", () => {
-    expect(isValidSlaaId("SL26-000452-8")).toBe(true);
-    expect(isValidSlaaId("SL26-000452-3")).toBe(false);
-    expect(isValidSlaaId("SL26-000001-3")).toBe(true);
+    expect(isValidSlaaId("SLA26-000452-8")).toBe(true);
+    expect(isValidSlaaId("SLA26-000452-3")).toBe(false);
+    expect(isValidSlaaId("SLA26-000001-3")).toBe(true);
+    expect(isValidSlaaId("SLA27-000001-1")).toBe(true);
+    // Legacy SL… still accepted and normalised to SLA…
     expect(isValidSlaaId("SL27-000001-1")).toBe(true);
+    expect(normalizeSlaaId("SL26-000452-8")).toBe("SLA26-000452-8");
   });
 
   it("accepts the ID typed without dashes or in lowercase", () => {
-    expect(normalizeSlaaId("sl26 000452 8")).toBe("SL26-000452-8");
-    expect(isValidSlaaId("sl260004528")).toBe(true);
+    expect(normalizeSlaaId("sla26 000452 8")).toBe("SLA26-000452-8");
+    expect(isValidSlaaId("sla260004528")).toBe(true);
   });
 });
 

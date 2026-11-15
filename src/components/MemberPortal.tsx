@@ -25,7 +25,7 @@ const eventLabel = (lang: Lang, code: string) =>
   EVENTS.find((e) => e.code === code)?.name[lang] ?? EXTRA_EVENTS[code] ?? code;
 
 const initials = (name: string) =>
-  name.replace(/[^\p{L}\s]/gu, " ").split(/\s+/).filter(Boolean).slice(-2).map((w) => w[0]).join("").toUpperCase() || "SL";
+  name.replace(/[^\p{L}\s]/gu, " ").split(/\s+/).filter(Boolean).slice(-2).map((w) => w[0]).join("").toUpperCase() || "SLA";
 
 /** Page heading row: title, a line under it, and the verification pill. */
 export function PortalHeading({ title, intro, r, t }: { title: string; intro?: string; r?: MemberRecord; t: Dict }) {

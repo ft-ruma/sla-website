@@ -32,7 +32,7 @@ type MockMember = {
 };
 
 const slaId = (serial: number) => {
-  const body = `SL26-${String(serial).padStart(6, "0")}`;
+  const body = `SLA26-${String(serial).padStart(6, "0")}`;
   return `${body}-${checkDigit(body)}`;
 };
 

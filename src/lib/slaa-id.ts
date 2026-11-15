@@ -1,8 +1,9 @@
-// SLA ID: SL26-000452-8 (year, 6-digit serial, Luhn check digit over the
+// SLA ID: SLA26-000452-8 (year, 6-digit serial, Luhn check digit over the
 // 8 digits). IDs issued before the unified format (A26-..., C26-..., O26-...)
-// stay valid for life. Must give the same answer as the registry's checker.
+// stay valid for life. Legacy SL26-… still normalises to SLA26-….
+// Must give the same answer as the registry's checker.
 
-export const SLAA_ID_REGEX = /^(?:SL|[ACO])[0-9]{2}-[0-9]{6}-[0-9]$/;
+export const SLAA_ID_REGEX = /^(?:SLA|[ACO])[0-9]{2}-[0-9]{6}-[0-9]$/;
 
 export function checkDigit(body: string): number {
   const digits = body.replace(/\D/g, "");
@@ -19,11 +20,12 @@ export function checkDigit(body: string): number {
   return (10 - (sum % 10)) % 10;
 }
 
-/** Uppercase and restore the dashes people often leave out: sl26000452 8 → SL26-000452-8. */
+/** Uppercase and restore the dashes people often leave out; upgrade SL… → SLA…. */
 export function normalizeSlaaId(input: string): string {
-  const v = input.toUpperCase().replace(/[\s–—]/g, "").replace(/-/g, "");
-  const m = v.match(/^(SL|[ACO])(\d{2})(\d{6})(\d)$/);
-  return m ? `${m[1]}${m[2]}-${m[3]}-${m[4]}` : input.trim().toUpperCase();
+  let v = input.toUpperCase().replace(/[\s–—]/g, "").replace(/-/g, "");
+  if (v.startsWith("SL") && !v.startsWith("SLA")) v = "SLA" + v.slice(2);
+  const m = v.match(/^(SLA|[ACO])(\d{2})(\d{6})(\d)$/);
+  return m ? `${m[1]}${m[2]}-${m[3]}-${m[4]}` : input.trim().toUpperCase().replace(/^SL(?=\d)/, "SLA");
 }
 
 export function isValidSlaaId(id: string): boolean {

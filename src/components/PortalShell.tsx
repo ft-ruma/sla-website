@@ -45,7 +45,7 @@ export function PortalLink({
 }
 
 const initials = (name: string) =>
-  name.replace(/[^\p{L}\s]/gu, " ").split(/\s+/).filter(Boolean).slice(-2).map((w) => w[0]).join("").toUpperCase() || "SL";
+  name.replace(/[^\p{L}\s]/gu, " ").split(/\s+/).filter(Boolean).slice(-2).map((w) => w[0]).join("").toUpperCase() || "SLA";
 
 function waitingCount(d: Dashboard | undefined) {
   if (!d) return 0;
