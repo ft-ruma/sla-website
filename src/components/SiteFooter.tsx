@@ -55,10 +55,14 @@ export function SiteFooter({ lang, t }: { lang: Lang; t: Dict }) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`${t.footerBuiltBy} ${t.footerAscendIt}`}
-            className="text-xs text-white/55 transition hover:text-white"
+            className="inline-flex flex-wrap items-baseline gap-x-2 gap-y-1 text-xs text-white/55 transition hover:text-white"
           >
-            {t.footerBuiltBy}{" "}
-            <span className="font-medium text-white/80">{t.footerAscendIt}</span>
+            <span className="font-medium tracking-wide">{t.footerBuiltBy}</span>
+            <span className="inline-flex items-baseline gap-1 text-[0.95rem] leading-none text-white">
+              <span className="font-serif font-bold tracking-tight">ascend</span>
+              <span className="text-[0.72em] font-sans font-bold tracking-[0.04em]">IT</span>
+            </span>
+            <span className="font-medium tracking-wide text-white/70">(Pvt) Ltd.</span>
           </a>
           <a
             href="https://www.ascendit.dev"
